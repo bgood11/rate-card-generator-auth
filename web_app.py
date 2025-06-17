@@ -534,9 +534,22 @@ def search_retailers():
         return jsonify({'error': 'Authentication required'}), 401
     
     query = request.args.get('q', '')
+    user_profile = get_current_user()
+    
     try:
         gen = get_generator()
-        retailers = gen.find_retailer(query)
+        
+        # Apply user-based filtering
+        if user_profile['role'] == 'admin':
+            # Admin users see all retailers
+            retailers = gen.find_retailer(query)
+        else:
+            # Regular users only see retailers they own
+            salesforce_id = user_profile.get('salesforce_id')
+            if not salesforce_id:
+                return jsonify({'error': 'User profile missing Salesforce ID. Please contact administrator.'}), 400
+            retailers = gen.find_retailer(query, salesforce_id)
+        
         return jsonify([{'name': r['Name'], 'id': r['Id']} for r in retailers[:20]])
     except Exception as e:
         return jsonify({'error': str(e)}), 500

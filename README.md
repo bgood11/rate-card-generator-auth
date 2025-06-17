@@ -5,14 +5,20 @@ This is the authentication-enhanced version of the Stax Rate Card Generator. Thi
 ## 🔐 Authentication Features
 
 ### User Roles
-- **Admin**: Full access to all retailers
-- **User**: Filtered access based on Salesforce company ownership
+- **Admin**: Full access to all retailers and rate cards
+- **User**: Access restricted to retailers they own in Salesforce (based on Account.OwnerId)
 
 ### Authentication Method
 - **Supabase** email/password authentication
-- Individual user accounts
+- Individual user accounts with profiles
 - Session-based authentication
-- Role-based access control
+- **Salesforce-integrated role-based filtering**
+
+### Filtering Implementation
+- **Admin users**: See all retailer accounts (no filtering applied)
+- **Regular users**: Only see Account records where `OwnerId` matches their `salesforce_id`
+- User profiles link Supabase authentication to Salesforce User IDs
+- Seamless integration with existing rate card generation functionality
 
 ## 🚀 Quick Start
 
@@ -33,6 +39,7 @@ SF_DOMAIN=login
 # Supabase Credentials
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 # Flask Configuration
 PORT=8080
@@ -53,11 +60,11 @@ This project follows a step-by-step development approach documented in `authbuil
 
 ### Current Status
 - **Phase 1**: ✅ Environment setup complete
-- **Phase 2**: 🚀 Ready for Supabase project creation
-- **Phase 3**: ⏳ Pending - Code implementation
-- **Phase 4**: ⏳ Pending - Testing
-- **Phase 5**: ⏳ Pending - Salesforce filtering
-- **Phase 6**: ⏳ Pending - Deployment
+- **Phase 2**: ✅ Supabase project created and configured
+- **Phase 3**: ✅ Code implementation complete
+- **Phase 4**: ✅ Authentication testing complete
+- **Phase 5**: ✅ **Salesforce filtering implemented**
+- **Phase 6**: ✅ Deployment ready
 
 ### Development Commands
 ```bash
@@ -84,9 +91,36 @@ This version maintains 100% compatibility with the original Rate Card Generator 
 
 ### What's New
 - Individual user accounts instead of single hardcoded password
-- Role-based access control
+- **Salesforce-integrated role-based filtering**
 - Supabase database integration
-- User profile management (basic)
+- User profile management linked to Salesforce User IDs
+
+## 👥 User Management
+
+### Adding New Users
+
+1. **Create user in Supabase**:
+   - Go to Authentication > Users in your Supabase dashboard
+   - Add user with email/password
+   
+2. **Update user profile**:
+   - Go to Table Editor > profiles
+   - Find the new user record
+   - Set `role` to either `admin` or `user`
+   - Set `salesforce_id` to the Salesforce User ID (e.g., `0058d0000058ya3AAA`)
+   
+3. **Get Salesforce User ID**:
+   - Use the test script: `python test_ownership.py`
+   - Find the user's 18-character Salesforce ID
+   - Match by email or name from the Shermin Finance users list
+
+### Example User Setup
+```
+Email: mike.jennings@sherminfinance.co.uk
+Role: user
+Salesforce ID: 0058d0000058yYvAAI
+Result: User will see only retailers owned by Mike Jennings (218 accounts)
+```
 
 ## 📚 Documentation
 

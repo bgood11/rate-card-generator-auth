@@ -22,15 +22,27 @@ class RateCardGenerator:
         # Remove product groupings - process each vertical separately
         self.product_groupings = None
     
-    def find_retailer(self, partial_name: str) -> List[Dict]:
-        """Find retailers and retailer branches matching partial name"""
+    def find_retailer(self, partial_name: str, salesforce_user_id: str = None) -> List[Dict]:
+        """Find retailers and retailer branches matching partial name
+        
+        Args:
+            partial_name: Partial retailer name to search for
+            salesforce_user_id: If provided, filter to only accounts owned by this user
+        """
+        # Base query with owner information
         query = f"""
-        SELECT Name, Id, RecordType.DeveloperName
+        SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-        ORDER BY Name
         """
+        
+        # Add owner filter if salesforce_user_id is provided
+        if salesforce_user_id:
+            query += f" AND OwnerId = '{salesforce_user_id}'"
+        
+        query += " ORDER BY Name"
+        
         return self.sf.query(query)['records']
     
     def get_rate_card_items(self, retailer_name: str) -> pd.DataFrame:
