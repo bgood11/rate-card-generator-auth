@@ -20,36 +20,36 @@ This document tracks the implementation of simple Supabase authentication to rep
 ### Documentation
 - [x] Create authbuild.md checklist
 - [x] Update CLAUDE.md with auth project status
-- [ ] Document current hardcoded auth system
+- [x] Document current hardcoded auth system
 
 ---
 
 ## 📋 Phase 2: Supabase Project Creation (Manual Setup)
 
 ### Step 2.1: Create New Supabase Project
-- [ ] **Go to Supabase Dashboard**: https://supabase.com/dashboard
-- [ ] **Click "New Project"**
-- [ ] **Project Details**:
+- [x] **Go to Supabase Dashboard**: https://supabase.com/dashboard
+- [x] **Click "New Project"**
+- [x] **Project Details**:
   - Organization: (Select your organization)
   - Project Name: `rate-card-auth`
   - Database Password: (Generate strong password - save it!)
   - Region: (Choose closest to you)
-- [ ] **Click "Create new project"** (takes ~2 minutes)
-- [ ] **Save project details**:
-  - Project URL: `https://[project-id].supabase.co`
-  - Anon Key: (from Settings > API)
-  - Service Role Key: (from Settings > API)
+- [x] **Click "Create new project"** (takes ~2 minutes)
+- [x] **Save project details**:
+  - Project URL: `https://pbuasstqxbzyciauuyur.supabase.co`
+  - Anon Key: (Added to .env file)
+  - Service Role Key: (Added to .env file)
 
 ### Step 2.2: Configure Authentication Settings
-- [ ] **Go to Authentication > Settings**
-- [ ] **Confirm Email**: Turn OFF for testing (can enable later)
-- [ ] **Sign up enabled**: Turn ON
-- [ ] **Email auth**: Turn ON
-- [ ] **Save settings**
+- [x] **Go to Authentication > Settings**
+- [x] **Confirm Email**: Turn OFF for testing (can enable later)
+- [x] **Sign up enabled**: Turn ON
+- [x] **Email auth**: Turn ON
+- [x] **Save settings**
 
 ### Step 2.3: Create User Profile Table
-- [ ] **Go to SQL Editor**
-- [ ] **Run this SQL** (copy/paste):
+- [x] **Go to SQL Editor**
+- [x] **Run this SQL** (copy/paste):
 ```sql
 -- Create profiles table extending auth.users
 CREATE TABLE public.profiles (
@@ -90,57 +90,57 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 ```
-- [ ] **Verify table created**: Check Tables tab shows `profiles`
+- [x] **Verify table created**: Check Tables tab shows `profiles`
 
 ### Step 2.4: Create Test Users
 **First User (Admin)**:
-- [ ] **Go to Authentication > Users**
-- [ ] **Click "Add user"**
-- [ ] **Email**: `admin@sherminfinance.co.uk`
-- [ ] **Password**: (Choose strong password - save it!)
-- [ ] **Auto Confirm User**: ON
-- [ ] **Click "Create user"**
-- [ ] **Go to Table Editor > profiles**
-- [ ] **Find the admin user row**
-- [ ] **Edit the row**:
+- [x] **Go to Authentication > Users**
+- [x] **Click "Add user"**
+- [x] **Email**: `admin@sherminfinance.co.uk`
+- [x] **Password**: (Choose strong password - save it!)
+- [x] **Auto Confirm User**: ON
+- [x] **Click "Create user"**
+- [x] **Go to Table Editor > profiles**
+- [x] **Find the admin user row**
+- [x] **Edit the row**:
   - role: `admin`
   - full_name: `Admin User`
   - salesforce_id: `leave blank for now`
-- [ ] **Save changes**
+- [x] **Save changes**
 
 **Second User (Test BDM)**:
-- [ ] **Go to Authentication > Users**
-- [ ] **Click "Add user"**
-- [ ] **Email**: `test@sherminfinance.co.uk`
-- [ ] **Password**: (Choose strong password - save it!)
-- [ ] **Auto Confirm User**: ON
-- [ ] **Click "Create user"**
-- [ ] **Go to Table Editor > profiles**
-- [ ] **Find the test user row**
-- [ ] **Edit the row**:
+- [x] **Go to Authentication > Users**
+- [x] **Click "Add user"**
+- [x] **Email**: `test@sherminfinance.co.uk`
+- [x] **Password**: (Choose strong password - save it!)
+- [x] **Auto Confirm User**: ON
+- [x] **Click "Create user"**
+- [x] **Go to Table Editor > profiles**
+- [x] **Find the test user row**
+- [x] **Edit the row**:
   - role: `user`
   - full_name: `Test BDM`
   - salesforce_id: `0051t00000ABC123` (example ID - we'll update later)
-- [ ] **Save changes**
+- [x] **Save changes**
 
 ### Step 2.5: Get Environment Variables
-- [ ] **Go to Settings > API**
-- [ ] **Copy these values**:
-  - Project URL: `SUPABASE_URL`
-  - anon public key: `SUPABASE_ANON_KEY`
-- [ ] **Add to .env file** (next phase)
+- [x] **Go to Settings > API**
+- [x] **Copy these values**:
+  - Project URL: `https://pbuasstqxbzyciauuyur.supabase.co`
+  - anon public key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+- [x] **Add to .env file** (already completed)
 
 ---
 
 ## 🔧 Phase 3: Code Implementation
 
 ### Step 3.1: Install Dependencies
-- [ ] **Activate virtual environment**: `source venv/bin/activate`
-- [ ] **Install Supabase**: `pip install supabase`
-- [ ] **Update requirements.txt**: Add `supabase>=2.0.0`
+- [x] **Activate virtual environment**: `source venv/bin/activate`
+- [x] **Install Supabase**: `pip install supabase`
+- [x] **Update requirements.txt**: Add `supabase>=2.0.0`
 
 ### Step 3.2: Update Environment Variables
-- [ ] **Add to .env file**:
+- [x] **Add to .env file**:
 ```
 # Existing Salesforce variables (keep these)
 SF_USERNAME=your.email@sherminfinance.co.uk
@@ -157,21 +157,21 @@ PORT=8080
 ```
 
 ### Step 3.3: Create Supabase Client
-- [ ] **Create new file**: `supabase_client.py`
-- [ ] **Add Supabase initialization code**
-- [ ] **Test connection to Supabase**
+- [x] **Create new file**: `supabase_client.py`
+- [x] **Add Supabase initialization code**
+- [x] **Test connection to Supabase**
 
 ### Step 3.4: Update Authentication Functions
-- [ ] **Backup current web_app.py**: `cp web_app.py web_app.py.backup`
-- [ ] **Update login route**: Replace hardcoded password with Supabase auth
-- [ ] **Update session management**: Store user info in session
-- [ ] **Keep all existing routes unchanged**
+- [x] **Backup current web_app.py**: `cp web_app.py web_app.py.backup`
+- [x] **Update login route**: Replace hardcoded password with Supabase auth
+- [x] **Update session management**: Store user info in session
+- [x] **Keep all existing routes unchanged**
 
 ### Step 3.5: Update Login Page HTML
-- [ ] **Modify login form**: Add proper email field
-- [ ] **Update form validation**: Email + password instead of just password
-- [ ] **Keep existing styling and branding**
-- [ ] **Add basic error messages**
+- [x] **Modify login form**: Add proper email field
+- [x] **Update form validation**: Email + password instead of just password
+- [x] **Keep existing styling and branding**
+- [x] **Add basic error messages**
 
 ---
 

@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, send_file, jsonify, send_from
 import os
 from rate_card_generator import RateCardGenerator
 from pdf_generator import PDFGenerator
-from supabase_client import authenticate_user, get_user_profile
 from dotenv import load_dotenv
 import tempfile
 import json
@@ -12,6 +11,9 @@ load_dotenv()
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'shermin_rate_card_secret_key_2025'  # For session management
+
+# Hardcoded password
+REQUIRED_PASSWORD = "Sh3rminRat3Ch3ck"
 
 # Initialize Salesforce connection
 generator = None
@@ -30,10 +32,6 @@ def get_generator():
 def is_authenticated():
     return session.get('authenticated', False)
 
-def get_current_user():
-    """Get current user profile from session"""
-    return session.get('user_profile')
-
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     return send_from_directory('static', filename)
@@ -41,34 +39,18 @@ def serve_static(filename):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email', '')
         password = request.form.get('password', '')
-        
-        # Authenticate with Supabase
-        auth_response = authenticate_user(email, password)
-        
-        if auth_response and auth_response.user:
-            # Get user profile from database
-            user_profile = get_user_profile(auth_response.user.id)
-            
-            if user_profile:
-                # Store authentication and user info in session
-                session['authenticated'] = True
-                session['user_profile'] = user_profile
-                session['user_email'] = email
-                return redirect(url_for('index'))
-            else:
-                return render_login_page(error="User profile not found. Please contact administrator.")
+        if password == REQUIRED_PASSWORD:
+            session['authenticated'] = True
+            return redirect(url_for('index'))
         else:
-            return render_login_page(error="Invalid email or password. Please try again.")
+            return render_login_page(error="Incorrect password. Please try again.")
     
     return render_login_page()
 
 @app.route('/logout')
 def logout():
     session.pop('authenticated', None)
-    session.pop('user_profile', None)
-    session.pop('user_email', None)
     return redirect(url_for('login'))
 
 def render_login_page(error=None):
@@ -117,20 +99,17 @@ def render_login_page(error=None):
         <h1>Rate Card Generator</h1>
         
         <div class="beta-notice">
-            <strong>Staff Login Required</strong><br>
-            Please login with your Shermin Finance email and password to access the Rate Card Generator.
+            <strong>Beta Access Required</strong><br>
+            This is a beta tool for internal use only. Please enter the access password to continue.
         </div>
         
         <div class="login-form">
             <form method="POST">
                 <div>
-                    <input type="email" name="email" placeholder="Email address" required>
+                    <input type="password" name="password" placeholder="Enter access password" required>
                 </div>
                 <div>
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <div>
-                    <button type="submit">Login</button>
+                    <button type="submit">Access Tool</button>
                 </div>
             </form>
             {error_html}
