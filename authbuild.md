@@ -175,33 +175,33 @@ PORT=8080
 
 ---
 
-## 🧪 Phase 4: Testing Basic Auth
+## ✅ Phase 4: Testing Basic Auth
 
 ### Step 4.1: Local Testing
-- [ ] **Start Flask app**: `python web_app.py`
-- [ ] **Go to**: `http://localhost:8080`
-- [ ] **Test admin login**:
+- [x] **Start Flask app**: `python web_app.py`
+- [x] **Go to**: `http://localhost:8080`
+- [x] **Test admin login**:
   - Email: `admin@sherminfinance.co.uk`
   - Password: (the one you set)
   - Should redirect to main page
-- [ ] **Test BDM login**:
+- [x] **Test BDM login**:
   - Email: `test@sherminfinance.co.uk`
   - Password: (the one you set)
   - Should redirect to main page
-- [ ] **Test invalid login**: Should show error
-- [ ] **Test logout**: Should redirect to login page
+- [x] **Test invalid login**: Should show error
+- [x] **Test logout**: Should redirect to login page
 
 ### Step 4.2: Functionality Testing
-- [ ] **Test retailer search**: Should work for both users
-- [ ] **Test rate card generation**: Should work for both users
-- [ ] **Test Excel download**: Should work
-- [ ] **Test PDF download**: Should work
-- [ ] **All users see ALL retailers** (no filtering yet)
+- [x] **Test retailer search**: Should work for both users
+- [x] **Test rate card generation**: Should work for both users
+- [x] **Test Excel download**: Should work
+- [x] **Test PDF download**: Should work
+- [x] **All users see ALL retailers** (no filtering yet)
 
 ### Step 4.3: Session Testing
-- [ ] **Test session persistence**: Refresh page, should stay logged in
-- [ ] **Test logout**: Should clear session
-- [ ] **Test direct URL access**: Should redirect to login if not authenticated
+- [x] **Test session persistence**: Refresh page, should stay logged in
+- [x] **Test logout**: Should clear session
+- [x] **Test direct URL access**: Should redirect to login if not authenticated
 
 ---
 
@@ -268,10 +268,10 @@ git checkout main
 ## 🎉 Success Criteria
 
 ### Phase 3 Success
-- [ ] Can login with email/password
-- [ ] Invalid credentials show error
-- [ ] All existing functionality works
-- [ ] Both users can access everything (no filtering yet)
+- [x] Can login with email/password
+- [x] Invalid credentials show error
+- [x] All existing functionality works
+- [x] Both users can access everything (no filtering yet)
 
 ### Phase 5 Success (if implemented)
 - [ ] Admin user sees all retailers

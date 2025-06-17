@@ -8,6 +8,7 @@ load_dotenv()
 # Supabase configuration
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
+SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
 
 def get_supabase_client() -> Client:
     """Get Supabase client instance"""
@@ -32,7 +33,8 @@ def authenticate_user(email: str, password: str):
 def get_user_profile(user_id: str):
     """Get user profile from profiles table"""
     try:
-        supabase = get_supabase_client()
+        # Use service role key for database queries (bypasses RLS)
+        supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         response = supabase.table('profiles').select('*').eq('id', user_id).execute()
         
         if response.data and len(response.data) > 0:
