@@ -13,6 +13,10 @@ load_dotenv()
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'shermin_rate_card_secret_key_2025'  # For session management
 
+def get_current_user():
+    """Get current user profile from session"""
+    return session.get('user_profile')
+
 # Initialize Salesforce connection
 generator = None
 
@@ -29,10 +33,6 @@ def get_generator():
 
 def is_authenticated():
     return session.get('authenticated', False)
-
-def get_current_user():
-    """Get current user profile from session"""
-    return session.get('user_profile')
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
@@ -299,7 +299,8 @@ def index():
             <input type="text" id="retailerSearch" placeholder="Enter retailer name..." />
             <button onclick="searchRetailers()">Search</button>
         </div>
-        <div class="form-group">
+        <!-- Commission checkbox only shown for admin users -->
+        <div class="form-group" id="commissionGroup" style="display: none;">
             <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #666;">
                 <input type="checkbox" id="hideSherminCommissions" style="margin: 0;">
                 Hide Shermin Commissions?
@@ -326,6 +327,26 @@ def index():
         <script>
             let currentRetailer = null;
             let currentRateCardData = null;
+            let userRole = null;
+            
+            // Get user info and show commission checkbox for admin users
+            async function initializeUserInterface() {
+                try {
+                    const response = await fetch('/user-info');
+                    const userInfo = await response.json();
+                    userRole = userInfo.role;
+                    
+                    // Show commission checkbox only for admin users
+                    if (userRole === 'admin') {
+                        document.getElementById('commissionGroup').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Failed to get user info:', error);
+                }
+            }
+            
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', initializeUserInterface);
             async function searchRetailers() {
                 const search = document.getElementById('retailerSearch').value;
                 if (!search) return;
@@ -365,7 +386,9 @@ def index():
                 document.getElementById('results').innerHTML = '';
                 currentRetailer = retailerName;
                 
-                const hideCommissions = document.getElementById('hideSherminCommissions').checked;
+                // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
                 
                 try {
                     const response = await fetch('/generate-data', {
@@ -416,7 +439,9 @@ def index():
                     table.className = 'rate-table';
                     
                     // Check if we should hide commissions
-                    const hideCommissions = document.getElementById('hideSherminCommissions').checked;
+                    // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
                     
                     // Header
                     const thead = document.createElement('thead');
@@ -463,7 +488,9 @@ def index():
                 
                 document.getElementById('status').innerHTML = 'Generating Excel file...<span class="loading-spinner"></span>';
                 
-                const hideCommissions = document.getElementById('hideSherminCommissions').checked;
+                // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
                 
                 try {
                     const response = await fetch('/generate', {
@@ -496,7 +523,9 @@ def index():
                 
                 document.getElementById('status').innerHTML = 'Generating PDF file...<span class="loading-spinner"></span>';
                 
-                const hideCommissions = document.getElementById('hideSherminCommissions').checked;
+                // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
                 
                 try {
                     const response = await fetch('/generate-pdf', {
@@ -554,6 +583,19 @@ def search_retailers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/user-info')
+def user_info():
+    """Get current user info for client-side logic"""
+    if not is_authenticated():
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    user_profile = get_current_user()
+    return jsonify({
+        'role': user_profile['role'],
+        'email': user_profile['email'],
+        'name': user_profile['full_name']
+    })
+
 @app.route('/generate-data', methods=['POST'])
 def generate_data():
     """Generate rate card data and return as JSON for display"""
@@ -561,6 +603,11 @@ def generate_data():
         return jsonify({'error': 'Authentication required'}), 401
     retailer_name = request.json.get('retailer')
     hide_commissions = request.json.get('hide_commissions', False)
+    
+    # For BDM users, always hide commissions regardless of checkbox
+    user_profile = get_current_user()
+    if user_profile['role'] != 'admin':
+        hide_commissions = True
     try:
         gen = get_generator()
         rate_card_data = gen.process_rate_cards(retailer_name)
@@ -582,6 +629,12 @@ def generate():
     
     retailer_name = request.json.get('retailer')
     hide_commissions = request.json.get('hide_commissions', False)
+    
+    # For BDM users, always hide commissions regardless of checkbox
+    user_profile = get_current_user()
+    if user_profile['role'] != 'admin':
+        hide_commissions = True
+        
     try:
         gen = get_generator()
         rate_card_data = gen.process_rate_cards(retailer_name)
@@ -606,6 +659,12 @@ def generate_pdf():
     
     retailer_name = request.json.get('retailer')
     hide_commissions = request.json.get('hide_commissions', False)
+    
+    # For BDM users, always hide commissions regardless of checkbox
+    user_profile = get_current_user()
+    if user_profile['role'] != 'admin':
+        hide_commissions = True
+        
     try:
         gen = get_generator()
         rate_card_data = gen.process_rate_cards(retailer_name)
