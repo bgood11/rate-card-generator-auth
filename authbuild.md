@@ -3,7 +3,7 @@
 ## Overview
 This document tracks the implementation of simple Supabase authentication to replace the hardcoded password system. We're taking a minimal, step-by-step approach to avoid complexity.
 
-**Branch**: `simple-auth`  
+**Repository**: https://github.com/bgood11/rate-card-generator-auth  
 **Production URL**: https://rate-card-generator-bgood11s-projects.vercel.app (PROTECTED - no changes)  
 **Goal**: Replace hardcoded password with individual user accounts + basic role filtering
 
