@@ -30,39 +30,28 @@ class RateCardGenerator:
             partial_name: Partial retailer name to search for
             salesforce_user_id: If provided, filter to only accounts owned by this user
         """
-        # Query to find retailers that have active rate cards with Stage__c = 'Live'
+        # First, let's use a simpler approach: get all retailers with Stage='Live' opportunities
+        # We'll query Account directly and filter for those with live opportunities
         query = f"""
-        SELECT Account.Name, Account.Id, Account.RecordType.DeveloperName, Account.OwnerId, Account.Owner.Name
-        FROM Opportunity
-        WHERE Account.Name LIKE '%{partial_name}%'
-            AND Account.RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-            AND RecordType.DeveloperName = 'Retailer_Rate_Card'
-            AND Stage__c = 'Live'
+        SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
+        FROM Account
+        WHERE Name LIKE '%{partial_name}%'
+            AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
+            AND Id IN (
+                SELECT AccountId 
+                FROM Opportunity 
+                WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
+                AND StageName = 'Live'
+            )
         """
         
         # Add owner filter if salesforce_user_id is provided
         if salesforce_user_id:
-            query += f" AND Account.OwnerId = '{salesforce_user_id}'"
+            query += f" AND OwnerId = '{salesforce_user_id}'"
         
-        query += " GROUP BY Account.Name, Account.Id, Account.RecordType.DeveloperName, Account.OwnerId, Account.Owner.Name"
-        query += " ORDER BY Account.Name"
+        query += " ORDER BY Name"
         
-        # Extract Account information from the Opportunity query results
-        results = self.sf.query(query)['records']
-        
-        # Transform the nested Account results to match the original format
-        retailers = []
-        for record in results:
-            account = record['Account']
-            retailers.append({
-                'Name': account['Name'],
-                'Id': account['Id'],
-                'RecordType': account['RecordType'],
-                'OwnerId': account['OwnerId'],
-                'Owner': account['Owner']
-            })
-        
-        return retailers
+        return self.sf.query(query)['records']
     
     def get_rate_card_items(self, retailer_name: str) -> pd.DataFrame:
         """Query 1: Get active rate card line items"""
