@@ -1,24 +1,44 @@
-# Rate Card Generator - Supabase Authentication Version
+# Stax Staff Portal - Rate Card Generator
 
-This is the authentication-enhanced version of the Stax Rate Card Generator. This repository adds individual user accounts and role-based access control to replace the hardcoded password system.
+A professional staff portal for Stax business development tools. Features a modern dashboard interface with role-based access control and seamless Salesforce integration for generating customer rate cards.
 
-## 🔐 Authentication Features
+## 🎯 Key Features
 
-### User Roles
-- **Admin**: Full access to all retailers and rate cards
-- **User**: Access restricted to retailers they own in Salesforce (based on Account.OwnerId)
+### Dashboard Portal
+- **Modern Dashboard**: Professional landing page showing available business tools
+- **Tool Cards**: Easy-to-navigate interface for accessing different tools
+- **User Profile Sidebar**: Shows user information and access level
+- **Responsive Design**: Built with Stax brand colors and design principles
 
-### Authentication Method
-- **Supabase** email/password authentication
-- Individual user accounts with profiles
-- Session-based authentication
-- **Salesforce-integrated role-based filtering**
+### Authentication & Security
+- **Supabase Authentication**: Secure email/password login system
+- **Role-Based Access**: Admin and User roles with different permissions
+- **Session Management**: Secure session handling for user state
+- **Salesforce Integration**: User profiles linked to Salesforce IDs for data filtering
 
-### Filtering Implementation
-- **Admin users**: See all retailer accounts (no filtering applied)
-- **Regular users**: Only see Account records where `OwnerId` matches their `salesforce_id`
-- User profiles link Supabase authentication to Salesforce User IDs
-- Seamless integration with existing rate card generation functionality
+### Rate Card Generator Tool
+- **Retailer Search**: Quick search functionality for finding retailers
+- **Salesforce Data Integration**: Real-time data from Salesforce
+- **Commission Control**: Admins can show/hide commission data
+- **Multiple Export Formats**: Generate Excel and PDF rate cards
+- **Role-Based Filtering**:
+  - Admin users: Access to all retailer accounts
+  - Regular users: Only see accounts they own in Salesforce
+
+## 🏗️ Architecture
+
+### Application Flow
+```
+Login → Dashboard Portal → Select Tool → Rate Card Generator
+```
+
+### Technology Stack
+- **Backend**: Flask (Python) with Jinja2 templating
+- **Frontend**: HTML/CSS/JavaScript with Stax design system
+- **Authentication**: Supabase (PostgreSQL)
+- **Data Source**: Salesforce API
+- **Deployment**: Vercel (serverless)
+- **File Generation**: Excel (openpyxl) and PDF (ReportLab)
 
 ## 🚀 Quick Start
 
@@ -58,13 +78,12 @@ python web_app.py
 
 This project follows a step-by-step development approach documented in `authbuild.md`.
 
-### Current Status
-- **Phase 1**: ✅ Environment setup complete
-- **Phase 2**: ✅ Supabase project created and configured
-- **Phase 3**: ✅ Code implementation complete
-- **Phase 4**: ✅ Authentication testing complete
-- **Phase 5**: ✅ **Salesforce filtering implemented**
-- **Phase 6**: ✅ Deployment ready
+### Project Status
+- **Authentication**: ✅ Complete with Supabase integration
+- **Dashboard Portal**: ✅ Implemented with Stax branding
+- **Rate Card Tool**: ✅ Fully functional with role-based filtering
+- **Salesforce Integration**: ✅ Real-time data access
+- **Production Deployment**: ✅ Live on Vercel
 
 ### Development Commands
 ```bash
@@ -79,21 +98,23 @@ pip install -r requirements.txt
 python web_app.py
 ```
 
-## 🔄 Migration from Original
+## 📂 Project Structure
 
-This version maintains 100% compatibility with the original Rate Card Generator while adding authentication:
-
-### What's the Same
-- All existing functionality (retailer search, rate card generation, Excel/PDF downloads)
-- Same UI and branding
-- Same Salesforce integration
-- Same deployment process
-
-### What's New
-- Individual user accounts instead of single hardcoded password
-- **Salesforce-integrated role-based filtering**
-- Supabase database integration
-- User profile management linked to Salesforce User IDs
+```
+rate-card-generator-auth/
+├── templates/               # Jinja2 templates
+│   ├── base.html           # Base template with header/sidebar
+│   └── dashboard.html      # Dashboard page template
+├── static/
+│   ├── css/
+│   │   └── dashboard.css   # Stax design system styles
+│   └── stax-logo.png       # Company logo
+├── web_app.py              # Main Flask application
+├── rate_card_generator.py  # Salesforce data processing
+├── pdf_generator.py        # PDF generation logic
+├── supabase_client.py      # Authentication handling
+└── requirements.txt        # Python dependencies
+```
 
 ## 👥 User Management
 
@@ -124,26 +145,38 @@ Result: User will see only retailers owned by Mike Jennings (218 accounts)
 
 ## 📚 Documentation
 
-- `authbuild.md` - Step-by-step development checklist
-- `README.md` - This file (project overview)
+- `README.md` - Project overview and setup guide (this file)
+- `CLAUDE.md` - AI assistant context and project details
+- `authbuild.md` - Authentication implementation checklist
+- `DASHBOARD_IMPLEMENTATION_TODO.md` - Dashboard development tracking
+- `DESIGN_PRINCIPLES.md` - Stax design system and UI guidelines
 
-## 🛠 Technical Stack
+## 🌐 Routes & Endpoints
 
-- **Backend**: Flask (Python)
-- **Authentication**: Supabase
-- **Database**: PostgreSQL (via Supabase)
-- **Frontend**: HTML/CSS/JavaScript (unchanged)
-- **Deployment**: Vercel
-- **External API**: Salesforce (simple-salesforce)
+### Public Routes
+- `/login` - User login page
+- `/logout` - Logout and session cleanup
+
+### Protected Routes
+- `/` - Redirects to dashboard
+- `/dashboard` - Main portal dashboard
+- `/tools/rate-card-generator` - Rate card generation tool
+
+### API Endpoints
+- `/search?q=<query>` - Search retailers (filtered by role)
+- `/user-info` - Get current user information
+- `/generate-data` - Generate rate card data (JSON)
+- `/generate` - Generate Excel file download
+- `/generate-pdf` - Generate PDF file download
 
 ## 🔒 Security Features
 
-- Secure password hashing
-- Session management
-- Role-based access control
-- SQL injection prevention
-- CSRF protection (planned)
-- Rate limiting (planned)
+- **Supabase Authentication**: Secure password hashing and storage
+- **Session Management**: Flask session cookies with secret key
+- **Role-Based Access Control**: Admin/User permissions
+- **Data Filtering**: Users only see their own Salesforce accounts
+- **SQL Injection Prevention**: Parameterized queries via Supabase
+- **Environment Variables**: Sensitive credentials stored securely
 
 ## 🌐 Deployment
 
@@ -161,7 +194,7 @@ For issues or questions about this authentication version, refer to the developm
 
 ---
 
-**Original Project**: [Rate Card Generator](https://rate-card-generator-bgood11s-projects.vercel.app)  
-**Development Branch**: Authentication Enhancement  
-**Version**: Auth 1.0.0  
-**Status**: Development in Progress
+**Production URL**: [rate-card-generator-auth.vercel.app](https://rate-card-generator-auth.vercel.app)  
+**Repository**: [github.com/bgood11/rate-card-generator-auth](https://github.com/bgood11/rate-card-generator-auth)  
+**Version**: 2.0.0 (Dashboard Portal Release)  
+**Status**: ✅ Production Ready
