@@ -7,7 +7,7 @@ This file provides essential context for Claude when working on the Stax Staff P
 **Project Name**: Stax Staff Portal - Rate Card Generator  
 **Repository**: rate-card-generator-auth  
 **Production URL**: https://rate-card-generator-auth.vercel.app  
-**Version**: 2.0.0 (Dashboard Portal Release)  
+**Version**: 2.1.0 (Modern Login & Branding Release)  
 **Status**: ✅ Production Ready
 
 ## 🏗️ Architecture Overview
@@ -31,11 +31,13 @@ User Login (Supabase) → Dashboard Portal → Select Tool → Rate Card Generat
 rate-card-generator-auth/
 ├── templates/               # Jinja2 templates
 │   ├── base.html           # Base template with header/sidebar
-│   └── dashboard.html      # Dashboard page template
+│   ├── dashboard.html      # Dashboard page template
+│   └── login.html          # Modern login page template
 ├── static/
 │   ├── css/
 │   │   └── dashboard.css   # Stax design system styles
 │   └── stax-logo.png       # Company logo
+├── 3628 Stax Logo Colour.svg # Official Stax logo
 ├── web_app.py              # Main Flask application
 ├── rate_card_generator.py  # Salesforce data processing
 ├── pdf_generator.py        # PDF generation logic
@@ -184,11 +186,11 @@ PORT=8080
 ### ✅ Completed Features
 - **Dashboard Portal**: Professional landing page with tool cards
 - **Template System**: Jinja2 templates with base.html inheritance
-- **Authentication**: Complete Supabase integration
+- **Authentication**: Complete Supabase integration with modern card-based login
 - **Role-Based Access**: Admin/User permissions
 - **Rate Card Tool**: Full functionality with Excel/PDF export
 - **Salesforce Integration**: Real-time data filtering
-- **UI/UX**: Stax design system implementation
+- **UI/UX**: Official Stax logo and clean design system implementation
 - **Production Deployment**: Live on Vercel
 
 ### 🎯 Tool Management System
@@ -271,5 +273,5 @@ Create test users in Supabase with different roles for testing:
 ---
 
 **Last Updated**: 2025-01-25  
-**Version**: 2.0.0 Dashboard Release  
+**Version**: 2.1.0 (Modern Login & Branding Release)  
 **Next Features**: Additional business tools (analytics, reporting, admin tools)
