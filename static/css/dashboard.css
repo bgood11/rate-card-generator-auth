@@ -173,6 +173,8 @@ body {
   margin-bottom: var(--space-2);
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
+  word-wrap: break-word;
+  word-break: break-all;
 }
 
 .profile-section strong {
@@ -211,15 +213,15 @@ body {
 
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-8);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 320px));
+  gap: var(--space-6);
 }
 
 .tool-card {
   background: var(--bg-primary);
-  padding: var(--space-8);
-  border-radius: var(--space-4);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: var(--space-6);
+  border-radius: var(--space-3);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   text-align: center;
   transition: all 0.3s ease;
   border: 1px solid var(--bg-tertiary);
@@ -227,15 +229,7 @@ body {
   overflow: hidden;
 }
 
-.tool-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(to right, var(--stax-teal), var(--stax-light-blue));
-}
+/* Removed top gradient border for cleaner look */
 
 .tool-card:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -244,8 +238,8 @@ body {
 }
 
 .tool-icon {
-  font-size: var(--text-4xl);
-  margin-bottom: var(--space-4);
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-3);
   display: block;
   transition: transform 0.2s ease;
 }
@@ -256,29 +250,29 @@ body {
 
 .tool-card h4 {
   color: var(--text-primary);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: var(--font-semibold);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   line-height: var(--leading-tight);
 }
 
 .tool-card p {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-6);
+  line-height: var(--leading-normal);
+  margin-bottom: var(--space-4);
 }
 
 .tool-button {
   background: linear-gradient(to right, var(--stax-teal), var(--stax-light-blue));
   color: var(--text-inverse);
   text-decoration: none;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-2);
   font-weight: var(--font-semibold);
   font-size: var(--text-sm);
   display: inline-block;
-  margin-top: var(--space-4);
+  margin-top: var(--space-2);
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.05em;
