@@ -49,7 +49,7 @@ def get_available_tools(user_role):
     for tool_id, tool_data in AVAILABLE_TOOLS.items():
         if user_role in tool_data['access_level'] and tool_data['enabled']:
             tool_data_copy = tool_data.copy()
-            tool_data_copy['url'] = url_for('index')  # Point to current rate card tool
+            tool_data_copy['url'] = '/tools/rate-card-generator'  # Direct URL for now
             tool_data_copy['id'] = tool_id
             user_tools.append(tool_data_copy)
     return user_tools
@@ -79,7 +79,7 @@ def login():
                 session['authenticated'] = True
                 session['user_profile'] = user_profile
                 session['user_email'] = email
-                return redirect(url_for('index'))
+                return redirect(url_for('dashboard'))
             else:
                 return render_login_page(error="User profile not found. Please contact administrator.")
         else:
@@ -175,10 +175,13 @@ def dashboard():
                          user=user_profile, 
                          tools=available_tools)
 
-@app.route('/')
-def index():
+# Create new route for rate card tool
+@app.route('/tools/rate-card-generator')
+def rate_card_generator():
     if not is_authenticated():
         return redirect(url_for('login'))
+    
+    # Keep existing HTML unchanged (copy from current index route)
     return '''
     <!DOCTYPE html>
     <html>
@@ -186,6 +189,437 @@ def index():
         <title>Stax Rate Card Generator</title>
         <style>
             body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+            .header-container { position: relative; }
+            .logout-btn { 
+                position: absolute; 
+                top: 10px; 
+                right: 10px; 
+                background-color: #666; 
+                color: white; 
+                padding: 8px 15px; 
+                font-size: 14px; 
+                text-decoration: none; 
+                border-radius: 4px;
+                transition: background-color 0.3s;
+            }
+            .logout-btn:hover { background-color: #555; }
+            .dashboard-btn { 
+                position: absolute; 
+                top: 10px; 
+                left: 10px; 
+                background-color: #477085; 
+                color: white; 
+                padding: 8px 15px; 
+                font-size: 14px; 
+                text-decoration: none; 
+                border-radius: 4px;
+                transition: background-color 0.3s;
+            }
+            .dashboard-btn:hover { background-color: #365566; }
+            .logo-container { text-align: center; margin-bottom: 30px; }
+            .logo { max-width: 300px; height: auto; }
+            h1 { color: #477085; text-align: center; margin-top: 20px; }
+            h2 { color: #477085; margin-top: 30px; margin-bottom: 15px; }
+            .form-group { margin-bottom: 20px; text-align: center; }
+            input, button { padding: 10px; font-size: 16px; border-radius: 4px; }
+            input { width: 300px; border: 1px solid #ddd; }
+            button { 
+                background-color: #2ab7e3; 
+                color: white; 
+                border: none; 
+                cursor: pointer; 
+                margin: 0 5px;
+                transition: background-color 0.3s;
+            }
+            button:hover { background-color: #1a97c3; }
+            button:disabled { 
+                background-color: #ccc; 
+                cursor: not-allowed; 
+            }
+            .download-button {
+                background-color: #477085;
+                padding: 12px 24px;
+                font-size: 18px;
+                margin: 10px;
+            }
+            .download-button:hover { background-color: #365566; }
+            #results { margin-top: 20px; }
+            .retailer-option { 
+                padding: 10px; 
+                cursor: pointer; 
+                border: 1px solid #ddd; 
+                margin: 5px 0; 
+                background: white;
+                border-radius: 4px;
+                transition: all 0.2s;
+            }
+            .retailer-option:hover { 
+                background-color: #e8f4f8; 
+                border-color: #2ab7e3;
+                transform: translateX(5px);
+            }
+            #status { margin-top: 20px; color: #666; text-align: center; }
+            
+            /* Rate card display styles */
+            #rateCardDisplay {
+                display: none;
+                margin-top: 30px;
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .rate-card-header {
+                border-bottom: 2px solid #477085;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .rate-card-header h2 {
+                margin: 0;
+                color: #477085;
+            }
+            .generation-date {
+                color: #666;
+                font-size: 14px;
+                margin-top: 5px;
+            }
+            .download-section {
+                text-align: center;
+                margin: 30px 0;
+                padding: 20px;
+                background: #f5f5f5;
+                border-radius: 8px;
+            }
+            .rate-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 30px;
+            }
+            .rate-table th {
+                background-color: #477085;
+                color: white;
+                padding: 12px;
+                text-align: left;
+                font-weight: bold;
+            }
+            .rate-table td {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            .rate-table tr:nth-child(even) {
+                background-color: #f5f5f5;
+            }
+            .rate-table tr:hover {
+                background-color: #e8f4f8;
+            }
+            .product-vertical-section {
+                margin-bottom: 40px;
+            }
+            .product-vertical-title {
+                color: #477085;
+                font-size: 20px;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            .loading-spinner {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #2ab7e3;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-left: 10px;
+                vertical-align: middle;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header-container">
+            <a href="/dashboard" class="dashboard-btn">← Dashboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+            <div class="logo-container">
+                <img src="/static/stax-logo.png" alt="Stax - Simply. Payments." class="logo" style="max-width: 200px; height: auto;">
+            </div>
+            <h1>Rate Card Generator</h1>
+        </div>
+    ''' + '''
+        <div class="form-group">
+            <input type="text" id="retailerSearch" placeholder="Enter retailer name..." />
+            <button onclick="searchRetailers()">Search</button>
+        </div>
+        <!-- Commission checkbox only shown for admin users -->
+        <div class="form-group" id="commissionGroup" style="display: none;">
+            <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #666;">
+                <input type="checkbox" id="hideSherminCommissions" style="margin: 0;">
+                Hide Shermin Commissions?
+            </label>
+        </div>
+        <div id="results"></div>
+        <div id="status"></div>
+        
+        <div id="rateCardDisplay">
+            <div class="rate-card-header">
+                <h2 id="retailerTitle"></h2>
+                <div class="generation-date" id="generationDate"></div>
+            </div>
+            
+            <div class="download-section">
+                <h3>Download Rate Card</h3>
+                <button class="download-button" onclick="downloadExcel()">📊 Download as Excel</button>
+                <button class="download-button" onclick="downloadPDF()">📄 Download as PDF</button>
+            </div>
+            
+            <div id="rateCardContent"></div>
+        </div>
+        
+        <script>
+            let currentRetailer = null;
+            let currentRateCardData = null;
+            let userRole = null;
+            
+            // Get user info and show commission checkbox for admin users
+            async function initializeUserInterface() {
+                try {
+                    const response = await fetch('/user-info');
+                    const userInfo = await response.json();
+                    userRole = userInfo.role;
+                    
+                    // Show commission checkbox only for admin users
+                    if (userRole === 'admin') {
+                        document.getElementById('commissionGroup').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Failed to get user info:', error);
+                }
+            }
+            
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', initializeUserInterface);
+            async function searchRetailers() {
+                const search = document.getElementById('retailerSearch').value;
+                if (!search) return;
+                
+                document.getElementById('status').textContent = 'Searching...';
+                document.getElementById('results').innerHTML = '';
+                
+                try {
+                    const response = await fetch('/search?q=' + encodeURIComponent(search));
+                    const data = await response.json();
+                    
+                    // Check if the response is an error
+                    if (data.error) {
+                        document.getElementById('status').textContent = 'Error: ' + data.error;
+                        document.getElementById('results').innerHTML = '';
+                        return;
+                    }
+                    
+                    // Handle successful response (array of retailers)
+                    if (data.length === 0) {
+                        document.getElementById('results').innerHTML = '<p>No retailers found</p>';
+                    } else {
+                        const html = data.map(r => 
+                            `<div class="retailer-option" onclick="generateRateCard('${r.name}')"">${r.name}</div>`
+                        ).join('');
+                        document.getElementById('results').innerHTML = html;
+                    }
+                    document.getElementById('status').textContent = '';
+                } catch (error) {
+                    document.getElementById('status').textContent = 'Error: ' + error.message;
+                    document.getElementById('results').innerHTML = '';
+                }
+            }
+    ''' + '''
+            async function generateRateCard(retailerName) {
+                document.getElementById('status').innerHTML = 'Generating rate card for ' + retailerName + '...<span class="loading-spinner"></span>';
+                document.getElementById('results').innerHTML = '';
+                currentRetailer = retailerName;
+                
+                // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
+                
+                try {
+                    const response = await fetch('/generate-data', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({retailer: retailerName, hide_commissions: hideCommissions})
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentRateCardData = data;
+                        displayRateCard(data);
+                        document.getElementById('status').textContent = '';
+                    } else {
+                        throw new Error('Failed to generate rate card');
+                    }
+                } catch (error) {
+                    document.getElementById('status').textContent = 'Error: ' + error.message;
+                }
+            }
+            
+            function displayRateCard(data) {
+                // Update header
+                document.getElementById('retailerTitle').textContent = currentRetailer + ' - Rate Card Analysis';
+                document.getElementById('generationDate').textContent = 'Generated: ' + new Date().toLocaleDateString('en-GB', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                
+                // Clear and populate content
+                const contentDiv = document.getElementById('rateCardContent');
+                contentDiv.innerHTML = '';
+                
+                // Process each product vertical
+                for (const [vertical, rows] of Object.entries(data)) {
+                    if (rows.length === 0) continue;
+                    
+                    const section = document.createElement('div');
+                    section.className = 'product-vertical-section';
+                    
+                    const title = document.createElement('h3');
+                    title.className = 'product-vertical-title';
+                    title.textContent = vertical + ' Waterfall';
+                    section.appendChild(title);
+                    
+                    const table = document.createElement('table');
+                    table.className = 'rate-table';
+                    
+                    // Check if we should hide commissions
+                    // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
+                    
+                    // Header
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+                    const headers = hideCommissions 
+                        ? ['Lender', 'Position', 'Term', 'Product Type', 'Deferred Period', 'APR Range', 'Subsidy']
+                        : ['Lender', 'Position', 'Shermin Commission', 'Term', 'Product Type', 'Deferred Period', 'APR Range', 'Subsidy'];
+                    
+                    headers.forEach(header => {
+                        const th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    });
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+                    
+                    // Body
+                    const tbody = document.createElement('tbody');
+                    rows.forEach(row => {
+                        const tr = document.createElement('tr');
+                        const dataKeys = hideCommissions 
+                            ? ['Lender_Name', 'Position', 'Term', 'Product_Type', 'Deferred_Period', 'APR_Range', 'Subsidy']
+                            : ['Lender_Name', 'Position', 'Shermin_Commission', 'Term', 'Product_Type', 'Deferred_Period', 'APR_Range', 'Subsidy'];
+                        
+                        dataKeys.forEach(key => {
+                            const td = document.createElement('td');
+                            td.textContent = row[key] || '';
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    
+                    section.appendChild(table);
+                    contentDiv.appendChild(section);
+                }
+                
+                // Show the rate card display
+                document.getElementById('rateCardDisplay').style.display = 'block';
+            }
+            
+            async function downloadExcel() {
+                if (!currentRetailer) return;
+                
+                document.getElementById('status').innerHTML = 'Generating Excel file...<span class="loading-spinner"></span>';
+                
+                // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
+                
+                try {
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({retailer: currentRetailer, hide_commissions: hideCommissions})
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = currentRetailer.replace(/[^a-z0-9]/gi, '_') + '_Rate_Card.xlsx';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.getElementById('status').textContent = '✅ Excel downloaded!';
+                        setTimeout(() => { document.getElementById('status').textContent = ''; }, 3000);
+                    } else {
+                        throw new Error('Failed to generate Excel');
+                    }
+                } catch (error) {
+                    document.getElementById('status').textContent = 'Error: ' + error.message;
+                }
+            }
+            
+            async function downloadPDF() {
+                if (!currentRetailer) return;
+                
+                document.getElementById('status').innerHTML = 'Generating PDF file...<span class="loading-spinner"></span>';
+                
+                // Get commission setting - always true for BDMs, checkbox value for admins
+                const commissionCheckbox = document.getElementById('hideSherminCommissions');
+                const hideCommissions = userRole === 'admin' ? (commissionCheckbox ? commissionCheckbox.checked : false) : true;
+                
+                try {
+                    const response = await fetch('/generate-pdf', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({retailer: currentRetailer, hide_commissions: hideCommissions})
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = currentRetailer.replace(/[^a-z0-9]/gi, '_') + '_Rate_Card.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.getElementById('status').textContent = '✅ PDF downloaded!';
+                        setTimeout(() => { document.getElementById('status').textContent = ''; }, 3000);
+                    } else {
+                        throw new Error('Failed to generate PDF');
+                    }
+                } catch (error) {
+                    document.getElementById('status').textContent = 'Error: ' + error.message;
+                }
+            }
+        </script>
+    </body>
+    </html>
+    '''
+
+@app.route('/')
+def index():
+    # Redirect root to dashboard
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    else:
+        return redirect(url_for('dashboard'))
+
+@app.route('/search')
             .header-container { position: relative; }
             .logout-btn { 
                 position: absolute; 
