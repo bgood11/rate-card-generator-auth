@@ -95,6 +95,43 @@ rate-card-generator-auth/
 - Clean, modern interface
 - Accessible typography and spacing
 
+## 🚀 DEPLOYMENT WORKFLOW - CRITICAL INSTRUCTIONS
+
+**⚠️ IMPORTANT: NEVER push directly to `main` branch without explicit user approval!**
+
+### Default Development Workflow (Unless Instructed Otherwise)
+1. **Always create feature branches** for any changes
+2. **Push to feature branch** to create preview deployments
+3. **Share preview URL** with user for testing and approval
+4. **Only merge to main** after explicit user approval
+5. **Production deployment** happens automatically when merging to main
+
+### Feature Branch Workflow
+```bash
+# 1. Create feature branch
+git checkout -b feature/descriptive-name
+
+# 2. Make changes and commit
+git add .
+git commit -m "Description of changes"
+
+# 3. Push to feature branch (creates preview deployment)
+git push origin feature/descriptive-name
+
+# 4. Share preview URL for testing
+# 5. Wait for user approval before merging to main
+
+# 6. Only after approval - merge to production
+git checkout main
+git merge feature/descriptive-name
+git push origin main  # Auto-deploys to production
+```
+
+### Preview vs Production
+- **Feature branches** → Vercel preview deployments (for testing)
+- **Main branch** → Production deployment (live site)
+- **Never skip the preview step** unless explicitly told to deploy directly
+
 ## 🔧 Development Commands
 
 ### Local Development
@@ -106,20 +143,6 @@ pip install -r requirements.txt
 
 # Run development server
 python web_app.py  # Runs on http://localhost:8080
-```
-
-### Git Workflow
-```bash
-# Feature development
-git checkout -b feature/feature-name
-git add .
-git commit -m "Description of changes"
-git push origin feature/feature-name
-
-# Production deployment
-git checkout main
-git merge feature/feature-name
-git push origin main  # Auto-deploys to Vercel
 ```
 
 ## 🗂️ Database Schema (Supabase)
