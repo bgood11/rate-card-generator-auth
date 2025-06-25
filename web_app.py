@@ -95,72 +95,7 @@ def logout():
     return redirect(url_for('login'))
 
 def render_login_page(error=None):
-    error_html = f'<div style="color: red; text-align: center; margin: 10px;">{error}</div>' if error else ''
-    
-    return f'''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Stax Rate Card Generator - Login</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: #f9f9f9; }}
-            .logo-container {{ text-align: center; margin-bottom: 30px; }}
-            .logo {{ max-width: 200px; height: auto; }}
-            h1 {{ color: #477085; text-align: center; margin-top: 20px; }}
-            .login-form {{ background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }}
-            input {{ padding: 12px; font-size: 16px; border-radius: 4px; border: 1px solid #ddd; width: 250px; margin: 10px; }}
-            button {{ 
-                background-color: #2ab7e3; 
-                color: white; 
-                border: none; 
-                cursor: pointer; 
-                padding: 12px 30px;
-                font-size: 16px;
-                border-radius: 4px;
-                margin: 20px;
-                transition: background-color 0.3s;
-            }}
-            button:hover {{ background-color: #1a97c3; }}
-            .beta-notice {{ 
-                background: #fff3cd; 
-                border: 1px solid #ffeaa7; 
-                color: #856404; 
-                padding: 15px; 
-                border-radius: 4px; 
-                margin-bottom: 20px; 
-                text-align: center;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="logo-container">
-            <img src="/static/stax-logo.png" alt="Stax Logo" class="logo">
-        </div>
-        
-        <h1>Rate Card Generator</h1>
-        
-        <div class="beta-notice">
-            <strong>Staff Login Required</strong><br>
-            Please login with your Shermin Finance email and password to access the Rate Card Generator.
-        </div>
-        
-        <div class="login-form">
-            <form method="POST">
-                <div>
-                    <input type="email" name="email" placeholder="Email address" required>
-                </div>
-                <div>
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <div>
-                    <button type="submit">Login</button>
-                </div>
-            </form>
-            {error_html}
-        </div>
-    </body>
-    </html>
-    '''
+    return render_template('login.html', error=error)
 
 @app.route('/dashboard')
 @app.route('/dashboard-test')  # Keep test route for now
