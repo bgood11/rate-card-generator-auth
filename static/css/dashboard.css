@@ -1,0 +1,154 @@
+/* Stax Brand Colors */
+:root {
+  --stax-teal: #477085;
+  --stax-pink: #d884b6;  
+  --stax-light-blue: #2ab7e3;
+  --stax-gray: #9d9c9c;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg-secondary);
+  color: var(--stax-gray);
+}
+
+.portal-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-header {
+  background: white;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo { height: 40px; }
+
+.header-left h1 {
+  color: var(--stax-teal);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-badge {
+  background: var(--stax-light-blue);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: var(--stax-gray);
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.portal-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  flex: 1;
+}
+
+.portal-sidebar {
+  background: white;
+  padding: 2rem;
+  border-right: 1px solid #e5e7eb;
+}
+
+.profile-section h3 {
+  color: var(--stax-teal);
+  margin-bottom: 1rem;
+}
+
+.portal-main {
+  padding: 2rem;
+}
+
+.welcome-section {
+  margin-bottom: 3rem;
+}
+
+.welcome-section h2 {
+  color: var(--stax-teal);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.tools-section h3 {
+  color: var(--stax-teal);
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.tool-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.tool-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.tool-card h4 {
+  color: var(--stax-teal);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.tool-button {
+  background: linear-gradient(to right, var(--stax-teal), var(--stax-light-blue));
+  color: white;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.tool-button:hover {
+  background: linear-gradient(to right, var(--stax-light-blue), var(--stax-teal));
+}

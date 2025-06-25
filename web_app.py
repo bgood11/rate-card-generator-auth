@@ -139,6 +139,13 @@ def render_login_page(error=None):
     </html>
     '''
 
+@app.route('/dashboard-test')
+def dashboard_test():
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    user_profile = get_current_user()
+    return render_template('dashboard.html', user=user_profile)
+
 @app.route('/')
 def index():
     if not is_authenticated():

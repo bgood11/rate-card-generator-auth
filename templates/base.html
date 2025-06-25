@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Stax Staff Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="portal-container">
+        <header class="portal-header">
+            <div class="header-left">
+                <img src="/static/stax-logo.png" alt="Stax" class="logo">
+                <h1>{% block page_title %}Main Dashboard{% endblock %}</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-email">{{ user.email }}</span>
+                <span class="role-badge">{{ user.role|title }}</span>
+                <a href="/logout" class="logout-btn">Sign Out</a>
+            </div>
+        </header>
+        
+        <div class="portal-layout">
+            <aside class="portal-sidebar">
+                <div class="profile-section">
+                    <h3>Your Profile</h3>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Role:</strong> {{ user.role|title }}</p>
+                    <p><strong>Access Level:</strong> {% if user.role == 'admin' %}Full Access{% else %}Limited Access{% endif %}</p>
+                </div>
+            </aside>
+            
+            <main class="portal-main">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+</body>
+</html>

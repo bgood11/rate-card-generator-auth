@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Stax Staff Portal - Dashboard{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h2>Welcome to Stax Staff Portal</h2>
+    <p>Access your business development tools and retailer resources</p>
+</div>
+
+<div class="tools-section">
+    <h3>Available Tools</h3>
+    <div class="tools-grid">
+        <div class="tool-card">
+            <div class="tool-icon">📊</div>
+            <h4>Rate Card Generator</h4>
+            <p>Generate rate cards with Salesforce data</p>
+            <a href="/tools/rate-card-generator" class="tool-button">Open Tool</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
