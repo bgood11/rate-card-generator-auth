@@ -31,6 +31,29 @@ def get_generator():
         )
     return generator
 
+# Simple tool structure in web_app.py
+AVAILABLE_TOOLS = {
+    'rate-card-generator': {
+        'name': 'Rate Card Generator',
+        'description': 'Generate rate cards with Salesforce data',
+        'icon': '📊',  # Just use emoji for now
+        'enabled': True,
+        'access_level': ['admin', 'user']
+    }
+    # Future tools will be added here
+}
+
+def get_available_tools(user_role):
+    """Get tools available to user based on role"""
+    user_tools = []
+    for tool_id, tool_data in AVAILABLE_TOOLS.items():
+        if user_role in tool_data['access_level'] and tool_data['enabled']:
+            tool_data_copy = tool_data.copy()
+            tool_data_copy['url'] = url_for('index')  # Point to current rate card tool
+            tool_data_copy['id'] = tool_id
+            user_tools.append(tool_data_copy)
+    return user_tools
+
 def is_authenticated():
     return session.get('authenticated', False)
 
@@ -139,12 +162,18 @@ def render_login_page(error=None):
     </html>
     '''
 
-@app.route('/dashboard-test')
-def dashboard_test():
+@app.route('/dashboard')
+@app.route('/dashboard-test')  # Keep test route for now
+def dashboard():
     if not is_authenticated():
         return redirect(url_for('login'))
+    
     user_profile = get_current_user()
-    return render_template('dashboard.html', user=user_profile)
+    available_tools = get_available_tools(user_profile['role'])
+    
+    return render_template('dashboard.html', 
+                         user=user_profile, 
+                         tools=available_tools)
 
 @app.route('/')
 def index():

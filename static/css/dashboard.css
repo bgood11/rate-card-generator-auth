@@ -289,3 +289,26 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(42, 183, 227, 0.4);
 }
+
+.tool-button.tool-disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tool-button.tool-disabled:hover {
+  background: var(--text-muted);
+  transform: none;
+  box-shadow: none;
+}
+
+.no-tools {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-12);
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+  background: var(--bg-primary);
+  border-radius: var(--space-4);
+  border: 2px dashed var(--bg-tertiary);
+}

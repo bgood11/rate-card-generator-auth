@@ -10,12 +10,24 @@
 <div class="tools-section">
     <h3>Available Tools</h3>
     <div class="tools-grid">
-        <div class="tool-card">
-            <div class="tool-icon">📊</div>
-            <h4>Rate Card Generator</h4>
-            <p>Generate rate cards with Salesforce data</p>
-            <a href="/tools/rate-card-generator" class="tool-button">Open Tool</a>
+        {% for tool in tools %}
+        <div class="tool-card" data-tool-id="{{ tool.id }}">
+            <div class="tool-icon">{{ tool.icon }}</div>
+            <h4 class="tool-title">{{ tool.name }}</h4>
+            <p class="tool-description">{{ tool.description }}</p>
+            {% if tool.enabled %}
+                <a href="{{ tool.url }}" class="tool-button">Open Tool</a>
+            {% else %}
+                <button class="tool-button tool-disabled" disabled>Coming Soon</button>
+            {% endif %}
         </div>
+        {% endfor %}
+        
+        {% if not tools %}
+        <div class="no-tools">
+            <p>No tools available for your role. Contact administrator for access.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
