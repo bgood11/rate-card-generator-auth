@@ -24,63 +24,59 @@ class RateCardGenerator:
     
     def find_retailer(self, partial_name: str, salesforce_user_id: str = None) -> List[Dict]:
         """Find retailers and retailer branches matching partial name
-        Only returns accounts that have live rate cards OR branches that have their own active assigned rate cards
+        Only returns accounts that have live rate cards with active assigned rate cards
         
         Args:
             partial_name: Partial retailer name to search for
             salesforce_user_id: If provided, filter to only accounts owned by this user
         """
-        # Build owner filter clause for reuse
-        owner_filter = f" AND OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
+        # Build owner filter clause for relationship field
+        owner_filter = f" AND Retailer__r.OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
         
-        # Use three separate queries and combine results to avoid nested semi-join restrictions
-        # Query 1: Accounts that have live rate cards with active assigned rate cards
-        query1 = f"""
-        SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
-        FROM Account
-        WHERE Name LIKE '%{partial_name}%'
-            AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-            AND Id IN (
-                SELECT AccountId 
-                FROM Opportunity 
-                WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
-                    AND StageName = 'Live'
-                    AND Id IN (
-                        SELECT Opportunity__c
-                        FROM Assigned_Rate_Card__c
-                        WHERE Active__c = true
-                    )
-            ){owner_filter}
+        # Single query using relationship fields to avoid nested semi-joins
+        # Query from Assigned_Rate_Card__c and get retailer information via relationships
+        query = f"""
+        SELECT 
+            Retailer__r.Name,
+            Retailer__r.Id, 
+            Retailer__r.RecordType.DeveloperName,
+            Retailer__r.OwnerId,
+            Retailer__r.Owner.Name
+        FROM Assigned_Rate_Card__c
+        WHERE 
+            Retailer__r.Name LIKE '%{partial_name}%'
+            AND Retailer__r.RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
+            AND Active__c = true
+            AND Opportunity__r.RecordType.DeveloperName = 'Retailer_Rate_Card'
+            AND Opportunity__r.StageName = 'Live'
+            {owner_filter}
         """.strip()
         
-        # Query 2: Branch accounts that have their own active assigned rate cards
-        query2 = f"""
-        SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
-        FROM Account
-        WHERE Name LIKE '%{partial_name}%'
-            AND RecordType.DeveloperName = 'Retailer_Branch'
-            AND Id IN (
-                SELECT Retailer__c 
-                FROM Assigned_Rate_Card__c 
-                WHERE Active__c = true
-            ){owner_filter}
-        """.strip()
+        # Execute query
+        results = self.sf.query_all(query)['records']
         
-        # Execute both queries
-        results1 = self.sf.query(query1)['records']
-        results2 = self.sf.query(query2)['records']
-        
-        # Combine and deduplicate results based on Id
+        # Transform to match expected format and deduplicate
         seen_ids = set()
         combined_results = []
         
-        for record in results1 + results2:
-            if record['Id'] not in seen_ids:
-                seen_ids.add(record['Id'])
-                combined_results.append(record)
+        for record in results:
+            retailer_data = record.get('Retailer__r', {})
+            retailer_id = retailer_data.get('Id')
+            
+            if retailer_id and retailer_id not in seen_ids:
+                seen_ids.add(retailer_id)
+                # Restructure to match original format
+                formatted_record = {
+                    'Name': retailer_data.get('Name'),
+                    'Id': retailer_id,
+                    'RecordType': {'DeveloperName': retailer_data.get('RecordType', {}).get('DeveloperName')},
+                    'OwnerId': retailer_data.get('OwnerId'),
+                    'Owner': {'Name': retailer_data.get('Owner', {}).get('Name')}
+                }
+                combined_results.append(formatted_record)
         
         # Sort by name
-        combined_results.sort(key=lambda x: x['Name'])
+        combined_results.sort(key=lambda x: x['Name'] or '')
         
         return combined_results
     
