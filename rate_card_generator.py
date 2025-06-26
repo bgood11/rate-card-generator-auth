@@ -122,7 +122,7 @@ class RateCardGenerator:
             Opportunity.Account.Name = '{opportunity_account_name}'
             AND Opportunity.RecordType.DeveloperName = 'Retailer_Rate_Card'
             AND Opportunity.StageName = 'Live'
-            AND Active__c = true
+            AND OpportunityLineItem.Active__c = true
         ORDER BY
             Opportunity.Lender_Company__r.Name,
             Opportunity.Approved_Product__r.Name,
