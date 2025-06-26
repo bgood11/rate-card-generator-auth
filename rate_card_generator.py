@@ -165,6 +165,7 @@ class RateCardGenerator:
         for record in results['records']:
             try:
                 flat_record = {
+                    'Opportunity_Id': record.get('OpportunityId'),
                     'Lender_Name': record['Opportunity']['Lender_Company__r']['Name'] if record.get('Opportunity') and record['Opportunity'].get('Lender_Company__r') else None,
                     'Product_Vertical': record['Opportunity']['Approved_Product__r']['Name'] if record.get('Opportunity') and record['Opportunity'].get('Approved_Product__r') else None,
                     'Commission': record['Opportunity']['Shermin_Commission__c'] if record.get('Opportunity') else None,
@@ -225,6 +226,7 @@ class RateCardGenerator:
             try:
                 flat_record = {
                     'Name': record.get('Name'),
+                    'Opportunity_Id': record.get('Opportunity__c'),
                     'Prime_SubPrime': record.get('Prime_SubPrime__c'),
                     'Prime_Position': record.get('Prime_Lender_Position__c'),
                     'SubPrime_Position': record.get('Sub_Prime_Lender_Position__c'),
@@ -263,10 +265,11 @@ class RateCardGenerator:
             return {}
         
         # Merge datasets - use INNER JOIN to only show rate cards with assigned priorities
+        # Include Opportunity_Id to ensure exact matching between OpportunityLineItem and Assigned_Rate_Card__c
         merged_df = pd.merge(
             rate_items_df,
-            priorities_df[['Lender_Name', 'Product_Vertical', 'Prime_SubPrime', 'Prime_Position', 'SubPrime_Position']],
-            on=['Lender_Name', 'Product_Vertical'],
+            priorities_df[['Opportunity_Id', 'Lender_Name', 'Product_Vertical', 'Prime_SubPrime', 'Prime_Position', 'SubPrime_Position']],
+            on=['Opportunity_Id', 'Lender_Name', 'Product_Vertical'],
             how='inner'
         )
         
