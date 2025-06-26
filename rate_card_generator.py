@@ -33,34 +33,52 @@ class RateCardGenerator:
         # Build owner filter clause for reuse
         owner_filter = f" AND OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
         
-        # Use UNION to combine:
-        # 1. Accounts that directly have live rate cards
-        # 2. Branch accounts whose parent accounts have live rate cards
-        query = f"""
+        # Use two separate queries and combine results to avoid nested semi-join restrictions
+        # Query 1: Accounts that directly have live rate cards
+        query1 = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-            AND (
-                Id IN (
-                    SELECT AccountId 
-                    FROM Opportunity 
-                    WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
-                    AND StageName = 'Live'
-                )
-                OR
-                (RecordType.DeveloperName = 'Retailer_Branch' 
-                 AND ParentId IN (
-                    SELECT AccountId 
-                    FROM Opportunity 
-                    WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
-                    AND StageName = 'Live'
-                ))
+            AND Id IN (
+                SELECT AccountId 
+                FROM Opportunity 
+                WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
+                AND StageName = 'Live'
             ){owner_filter}
-        ORDER BY Name
         """
         
-        return self.sf.query(query)['records']
+        # Query 2: Branch accounts whose parent accounts have live rate cards
+        query2 = f"""
+        SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
+        FROM Account
+        WHERE Name LIKE '%{partial_name}%'
+            AND RecordType.DeveloperName = 'Retailer_Branch'
+            AND ParentId IN (
+                SELECT AccountId 
+                FROM Opportunity 
+                WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
+                AND StageName = 'Live'
+            ){owner_filter}
+        """
+        
+        # Execute both queries
+        results1 = self.sf.query(query1)['records']
+        results2 = self.sf.query(query2)['records']
+        
+        # Combine and deduplicate results based on Id
+        seen_ids = set()
+        combined_results = []
+        
+        for record in results1 + results2:
+            if record['Id'] not in seen_ids:
+                seen_ids.add(record['Id'])
+                combined_results.append(record)
+        
+        # Sort by name
+        combined_results.sort(key=lambda x: x['Name'])
+        
+        return combined_results
     
     def get_rate_card_items(self, retailer_name: str) -> pd.DataFrame:
         """Query 1: Get active rate card line items"""
