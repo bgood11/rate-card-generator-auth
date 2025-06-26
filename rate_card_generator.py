@@ -225,12 +225,12 @@ class RateCardGenerator:
             print(f"[WARNING] This retailer may not have active assigned rate cards")
             return {}
         
-        # Merge datasets
+        # Merge datasets - use INNER JOIN to only show rate cards with assigned priorities
         merged_df = pd.merge(
             rate_items_df,
             priorities_df[['Lender_Name', 'Product_Vertical', 'Prime_SubPrime', 'Prime_Position', 'SubPrime_Position']],
             on=['Lender_Name', 'Product_Vertical'],
-            how='left'
+            how='inner'
         )
         
         print(f"[DEBUG] Merged data: {len(merged_df)} rows")
