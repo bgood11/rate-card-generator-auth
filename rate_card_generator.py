@@ -123,6 +123,12 @@ class RateCardGenerator:
             AND Opportunity.RecordType.DeveloperName = 'Retailer_Rate_Card'
             AND Opportunity.StageName = 'Live'
             AND Active__c = true
+            AND Opportunity.Id IN (
+                SELECT Opportunity__c 
+                FROM Assigned_Rate_Card__c 
+                WHERE Retailer__r.Name = '{retailer_name}' 
+                AND Active__c = true
+            )
         ORDER BY
             Opportunity.Lender_Company__r.Name,
             Opportunity.Approved_Product__r.Name,
