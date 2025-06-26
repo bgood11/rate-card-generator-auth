@@ -7,7 +7,7 @@ This file provides essential context for Claude when working on the Stax Staff P
 **Project Name**: Stax Staff Portal - Rate Card Generator  
 **Repository**: rate-card-generator-auth  
 **Production URL**: https://rate-card-generator-auth.vercel.app  
-**Version**: 2.1.0 (Modern Login & Branding Release)  
+**Version**: 2.1.1 (Enhanced Retailer Search)  
 **Status**: ✅ Production Ready
 
 ## 🏗️ Architecture Overview
@@ -189,7 +189,8 @@ PORT=8080
 - **Authentication**: Complete Supabase integration with modern card-based login
 - **Role-Based Access**: Admin/User permissions
 - **Rate Card Tool**: Full functionality with Excel/PDF export
-- **Salesforce Integration**: Real-time data filtering
+- **Enhanced Retailer Search**: Comprehensive search including branch accounts with parent rate cards
+- **Salesforce Integration**: Real-time data filtering with improved query logic
 - **UI/UX**: Official Stax logo and clean design system implementation
 - **Production Deployment**: Live on Vercel
 
@@ -272,6 +273,7 @@ Create test users in Supabase with different roles for testing:
 
 ---
 
-**Last Updated**: 2025-01-25  
-**Version**: 2.1.0 (Modern Login & Branding Release)  
+**Last Updated**: 2025-01-26  
+**Version**: 2.1.1 (Enhanced Retailer Search)  
+**Latest Enhancement**: Improved retailer search to include branch accounts whose parent accounts have live rate cards  
 **Next Features**: Additional business tools (analytics, reporting, admin tools)

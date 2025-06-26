@@ -24,32 +24,41 @@ class RateCardGenerator:
     
     def find_retailer(self, partial_name: str, salesforce_user_id: str = None) -> List[Dict]:
         """Find retailers and retailer branches matching partial name
-        Only returns retailers that have live rate cards (Stage__c = 'Live')
+        Returns accounts that have live rate cards OR are branches whose parent accounts have live rate cards
         
         Args:
             partial_name: Partial retailer name to search for
             salesforce_user_id: If provided, filter to only accounts owned by this user
         """
-        # First, let's use a simpler approach: get all retailers with Stage='Live' opportunities
-        # We'll query Account directly and filter for those with live opportunities
+        # Build owner filter clause for reuse
+        owner_filter = f" AND OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
+        
+        # Use UNION to combine:
+        # 1. Accounts that directly have live rate cards
+        # 2. Branch accounts whose parent accounts have live rate cards
         query = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-            AND Id IN (
-                SELECT AccountId 
-                FROM Opportunity 
-                WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
-                AND StageName = 'Live'
-            )
+            AND (
+                Id IN (
+                    SELECT AccountId 
+                    FROM Opportunity 
+                    WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
+                    AND StageName = 'Live'
+                )
+                OR
+                (RecordType.DeveloperName = 'Retailer_Branch' 
+                 AND ParentId IN (
+                    SELECT AccountId 
+                    FROM Opportunity 
+                    WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
+                    AND StageName = 'Live'
+                ))
+            ){owner_filter}
+        ORDER BY Name
         """
-        
-        # Add owner filter if salesforce_user_id is provided
-        if salesforce_user_id:
-            query += f" AND OwnerId = '{salesforce_user_id}'"
-        
-        query += " ORDER BY Name"
         
         return self.sf.query(query)['records']
     

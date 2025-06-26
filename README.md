@@ -17,7 +17,7 @@ A professional staff portal for Stax business development tools. Features a mode
 - **Salesforce Integration**: User profiles linked to Salesforce IDs for data filtering
 
 ### Rate Card Generator Tool
-- **Retailer Search**: Quick search functionality for finding retailers
+- **Enhanced Retailer Search**: Comprehensive search that finds both main retailers and their branch locations
 - **Salesforce Data Integration**: Real-time data from Salesforce
 - **Commission Control**: Admins can show/hide commission data
 - **Multiple Export Formats**: Generate Excel and PDF rate cards
@@ -199,5 +199,5 @@ For issues or questions about this authentication version, refer to the developm
 
 **Production URL**: [rate-card-generator-auth.vercel.app](https://rate-card-generator-auth.vercel.app)  
 **Repository**: [github.com/bgood11/rate-card-generator-auth](https://github.com/bgood11/rate-card-generator-auth)  
-**Version**: 2.1.0 (Modern Login & Branding Release)  
+**Version**: 2.1.1 (Enhanced Retailer Search)  
 **Status**: ✅ Production Ready
