@@ -105,6 +105,24 @@ class RateCardGenerator:
             # Fallback to retailer name if account not found
             opportunity_account_name = retailer_name
         
+        # First get the opportunity IDs that have active assigned rate cards
+        assigned_opp_query = f"""
+        SELECT Opportunity__c
+        FROM Assigned_Rate_Card__c 
+        WHERE Retailer__r.Name = '{retailer_name}' 
+        AND Active__c = true
+        """
+        
+        assigned_results = self.sf.query_all(assigned_opp_query)
+        assigned_opp_ids = [record['Opportunity__c'] for record in assigned_results['records'] if record.get('Opportunity__c')]
+        
+        if not assigned_opp_ids:
+            print(f"[DEBUG] No active assigned rate cards found for {retailer_name}")
+            return pd.DataFrame()
+        
+        # Convert to quoted string list for IN clause
+        opp_ids_str = "', '".join(assigned_opp_ids)
+        
         query = f"""
         SELECT
             Opportunity.Lender_Company__r.Name,
@@ -123,12 +141,7 @@ class RateCardGenerator:
             AND Opportunity.RecordType.DeveloperName = 'Retailer_Rate_Card'
             AND Opportunity.StageName = 'Live'
             AND Active__c = true
-            AND Opportunity.Id IN (
-                SELECT Opportunity__c 
-                FROM Assigned_Rate_Card__c 
-                WHERE Retailer__r.Name = '{retailer_name}' 
-                AND Active__c = true
-            )
+            AND Opportunity.Id IN ('{opp_ids_str}')
         ORDER BY
             Opportunity.Lender_Company__r.Name,
             Opportunity.Approved_Product__r.Name,
