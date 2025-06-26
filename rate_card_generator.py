@@ -45,9 +45,9 @@ class RateCardGenerator:
                 SELECT AccountId 
                 FROM Opportunity 
                 WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
-                AND StageName = 'Live'
+                    AND StageName = 'Live'
             ){owner_filter}
-        """
+        """.strip()
         
         # Query 2: Branch accounts that have their own active assigned rate cards (excluding terminated)
         query2 = f"""
@@ -61,7 +61,7 @@ class RateCardGenerator:
                 FROM Assigned_Rate_Card__c 
                 WHERE Active__c = true
             ){owner_filter}
-        """
+        """.strip()
         
         # Execute both queries
         results1 = self.sf.query(query1)['records']
