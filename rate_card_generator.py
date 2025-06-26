@@ -34,7 +34,7 @@ class RateCardGenerator:
         owner_filter = f" AND OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
         
         # Use three separate queries and combine results to avoid nested semi-join restrictions
-        # Query 1: Accounts that directly have live rate cards
+        # Query 1: Accounts that have live rate cards WITH active assigned rate cards
         query1 = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
@@ -45,6 +45,11 @@ class RateCardGenerator:
                 FROM Opportunity 
                 WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
                 AND StageName = 'Live'
+                AND Id IN (
+                    SELECT Opportunity__c
+                    FROM Assigned_Rate_Card__c
+                    WHERE Active__c = true
+                )
             ){owner_filter}
         """
         
