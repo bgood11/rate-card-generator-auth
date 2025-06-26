@@ -24,7 +24,7 @@ class RateCardGenerator:
     
     def find_retailer(self, partial_name: str, salesforce_user_id: str = None) -> List[Dict]:
         """Find retailers and retailer branches matching partial name
-        Returns accounts that have live rate cards OR are branches whose parent accounts have live rate cards
+        Only returns accounts that have live rate cards OR branches that have their own active assigned rate cards
         
         Args:
             partial_name: Partial retailer name to search for
@@ -33,7 +33,7 @@ class RateCardGenerator:
         # Build owner filter clause for reuse
         owner_filter = f" AND OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
         
-        # Use two separate queries and combine results to avoid nested semi-join restrictions
+        # Use three separate queries and combine results to avoid nested semi-join restrictions
         # Query 1: Accounts that directly have live rate cards
         query1 = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
@@ -48,17 +48,16 @@ class RateCardGenerator:
             ){owner_filter}
         """
         
-        # Query 2: Branch accounts whose parent accounts have live rate cards
+        # Query 2: Branch accounts that have their own active assigned rate cards
         query2 = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName = 'Retailer_Branch'
-            AND ParentId IN (
-                SELECT AccountId 
-                FROM Opportunity 
-                WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
-                AND StageName = 'Live'
+            AND Id IN (
+                SELECT Retailer__c 
+                FROM Assigned_Rate_Card__c 
+                WHERE Active__c = true
             ){owner_filter}
         """
         
@@ -219,6 +218,11 @@ class RateCardGenerator:
         
         if rate_items_df.empty:
             print(f"[WARNING] No rate card items found for {retailer_name}")
+            return {}
+        
+        if priorities_df.empty:
+            print(f"[WARNING] No assigned rate card priorities found for {retailer_name}")
+            print(f"[WARNING] This retailer may not have active assigned rate cards")
             return {}
         
         # Merge datasets
