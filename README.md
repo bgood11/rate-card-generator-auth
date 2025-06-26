@@ -214,7 +214,19 @@ For issues or questions about this authentication version, refer to the developm
 
 ---
 
+## 🔧 Recent Updates
+
+### Version 2.3.0 - Terminated Retailer Filtering
+- **Issue**: Terminated retailers appearing in search results
+- **Solution**: Enhanced search to only show retailers with active assigned rate cards
+- **Result**: Cleaner search results, terminated retailers naturally excluded
+
+### Version 2.2.0 - Rate Card Position Fix
+- **Issue**: Lenders appearing in duplicate positions
+- **Solution**: Complete query architecture rewrite
+- **Result**: Correct position data, no duplicates
+
 **Production URL**: [rate-card-generator-auth.vercel.app](https://rate-card-generator-auth.vercel.app)  
 **Repository**: [github.com/bgood11/rate-card-generator-auth](https://github.com/bgood11/rate-card-generator-auth)  
-**Version**: 2.2.0 (Rate Card Position Fix)  
+**Version**: 2.3.0 (Terminated Retailer Filtering)  
 **Status**: ✅ Production Ready

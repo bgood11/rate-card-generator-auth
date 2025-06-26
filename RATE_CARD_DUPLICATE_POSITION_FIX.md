@@ -192,7 +192,27 @@ Test with these retailers to verify fix:
 
 ---
 
+## Update: Additional Search Improvements
+
+### Terminated Retailer Filtering (2025-01-26)
+
+**Additional Issue**: Terminated retailers were appearing in search results despite having no active rate cards.
+
+**Solution Approach**: Instead of complex name-based filtering, enhanced the search queries to only show retailers with active assigned rate cards. This naturally excludes terminated retailers.
+
+**Technical Changes**:
+- Enhanced Query 1 to include active Assigned_Rate_Card__c check
+- Removed all problematic NOT LIKE clauses
+- Simplified logic relies on data integrity
+
+**Final Status**: Both issues resolved:
+1. ✅ No duplicate positions for lenders
+2. ✅ Terminated retailers excluded from search
+
+---
+
 **Date**: 2025-01-26  
-**Fix Type**: Complete Architecture Rewrite  
-**Impact**: Critical - Eliminates data integrity issues in rate card generation  
-**Testing Status**: Deployed to preview branch for validation
+**Fix Type**: Complete Architecture Rewrite + Search Enhancement  
+**Impact**: Critical - Eliminates data integrity issues and improves search quality  
+**Final Version**: 2.3.0  
+**Status**: ✅ Ready for production deployment

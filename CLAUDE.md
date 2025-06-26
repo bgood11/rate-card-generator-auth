@@ -333,7 +333,42 @@ def process_rate_cards(self, retailer_name: str) -> Dict[str, pd.DataFrame]:
 
 ---
 
+## 🔧 Additional Fixes: Terminated Retailer Filtering
+
+### Problem
+After fixing the duplicate position issue, terminated retailers were still appearing in search results despite having no active rate cards.
+
+### Solution Journey
+1. **Initial Attempts (Failed)**:
+   - `Name NOT LIKE '%TERMINATED%'` - SOQL syntax error
+   - `NOT (Name LIKE '%TERMINATED%')` - SOQL syntax error  
+   - `(NOT Name LIKE '%TERMINATED%')` - SOQL syntax error
+   - `NOT Name LIKE '%TERMINATED%'` - Still SOQL syntax error
+
+2. **Root Cause**: SOQL has specific syntax requirements that differ from standard SQL
+
+3. **Final Solution**: Simplified approach - only show retailers with active assigned rate cards
+   - Removed all name-based filtering
+   - Enhanced Query 1 to check for active Assigned_Rate_Card__c records
+   - Terminated retailers naturally excluded (they have no active rate cards)
+
+### Technical Implementation
+```sql
+-- Query 1: Now checks for active assigned rate cards
+AND Id IN (
+    SELECT AccountId 
+    FROM Opportunity 
+    WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
+        AND StageName = 'Live'
+        AND Id IN (
+            SELECT Opportunity__c
+            FROM Assigned_Rate_Card__c
+            WHERE Active__c = true
+        )
+)
+```
+
 **Last Updated**: 2025-01-26  
-**Version**: 2.2.0 (Rate Card Position Fix)  
-**Latest Enhancement**: Fixed critical duplicate position issue through complete query architecture rewrite  
+**Version**: 2.3.0 (Terminated Retailer Filtering)  
+**Latest Enhancement**: Simplified search to only show retailers with active assigned rate cards  
 **Next Features**: Additional business tools (analytics, reporting, admin tools)
