@@ -80,7 +80,7 @@ class RateCardGenerator:
         return combined_results
     
     def get_rate_card_items(self, retailer_name: str) -> pd.DataFrame:
-        """Get rate card items with position data in a single query"""
+        """Get rate card items with position data using two-step approach"""
         # First check if this is a retailer branch and get parent account if needed
         account_query = f"""
         SELECT Name, RecordType.DeveloperName, Parent.Name
@@ -105,62 +105,52 @@ class RateCardGenerator:
             # Fallback to retailer name if account not found
             opportunity_account_name = retailer_name
         
-        # Single query that joins OpportunityLineItem with Assigned_Rate_Card__c
-        # This eliminates any merge complexity and ensures exact matching
-        query = f"""
+        # Step 1: Query Assigned_Rate_Card__c records to get positions and opportunity IDs
+        arc_query = f"""
         SELECT
-            OpportunityLineItem.Id,
-            OpportunityLineItem.OpportunityId,
-            OpportunityLineItem.Opportunity.Lender_Company__r.Name,
-            OpportunityLineItem.Opportunity.Approved_Product__r.Name,
-            OpportunityLineItem.Opportunity.Shermin_Commission__c,
-            OpportunityLineItem.Product2.Name,
-            OpportunityLineItem.Product2.APR__c,
-            OpportunityLineItem.Product2.Term__c,
-            OpportunityLineItem.Product2.ProductCode,
-            OpportunityLineItem.Product2.Deferred_Period__c,
-            OpportunityLineItem.Retailer_Subsidy__c,
-            OpportunityLineItem.Retailer_Commission__c,
-            Assigned_Rate_Card__c.Prime_SubPrime__c,
-            Assigned_Rate_Card__c.Prime_Lender_Position__c,
-            Assigned_Rate_Card__c.Sub_Prime_Lender_Position__c
+            Id,
+            Opportunity__c,
+            Prime_SubPrime__c,
+            Prime_Lender_Position__c,
+            Sub_Prime_Lender_Position__c,
+            Opportunity__r.Lender_Company__r.Name,
+            Opportunity__r.Approved_Product__r.Name,
+            Opportunity__r.Shermin_Commission__c
         FROM Assigned_Rate_Card__c
         WHERE
-            Assigned_Rate_Card__c.Retailer__r.Name = '{retailer_name}'
-            AND Assigned_Rate_Card__c.Active__c = true
-            AND Assigned_Rate_Card__c.Opportunity__r.Account.Name = '{opportunity_account_name}'
-            AND Assigned_Rate_Card__c.Opportunity__r.RecordType.DeveloperName = 'Retailer_Rate_Card'
-            AND Assigned_Rate_Card__c.Opportunity__r.StageName = 'Live'
-            AND Assigned_Rate_Card__c.Opportunity__c IN (
-                SELECT OpportunityId 
-                FROM OpportunityLineItem 
-                WHERE Active__c = true
-            )
+            Retailer__r.Name = '{retailer_name}'
+            AND Active__c = true
+            AND Opportunity__r.Account.Name = '{opportunity_account_name}'
+            AND Opportunity__r.RecordType.DeveloperName = 'Retailer_Rate_Card'
+            AND Opportunity__r.StageName = 'Live'
         ORDER BY
-            Assigned_Rate_Card__c.Opportunity__r.Lender_Company__r.Name,
-            Assigned_Rate_Card__c.Opportunity__r.Approved_Product__r.Name
+            Opportunity__r.Lender_Company__r.Name,
+            Opportunity__r.Approved_Product__r.Name
         """
         
         try:
-            results = self.sf.query_all(query)
-            print(f"[DEBUG] Single query returned {len(results['records'])} assigned rate card records")
+            arc_results = self.sf.query_all(arc_query)
+            print(f"[DEBUG] Found {len(arc_results['records'])} assigned rate card records")
         except Exception as e:
-            print(f"[ERROR] Single query failed: {e}")
-            print("[DEBUG] Falling back to separate queries approach")
+            print(f"[ERROR] Assigned rate card query failed: {e}")
             return self._get_rate_card_items_fallback(retailer_name, opportunity_account_name)
         
-        # Process each Assigned_Rate_Card__c record and get its OpportunityLineItem records
+        if not arc_results['records']:
+            print(f"[WARNING] No assigned rate cards found for {retailer_name}")
+            return pd.DataFrame()
+        
+        # Step 2: For each unique opportunity, get its OpportunityLineItem records
         flattened_records = []
         processed_opportunities = set()
         
-        for arc_record in results['records']:
+        for arc_record in arc_results['records']:
             try:
                 opportunity_id = arc_record.get('Opportunity__c')
                 if opportunity_id in processed_opportunities:
                     continue
                 processed_opportunities.add(opportunity_id)
                 
-                # Get OpportunityLineItem records for this opportunity
+                # Get OpportunityLineItem records for this specific opportunity
                 oli_query = f"""
                 SELECT
                     Id,
@@ -182,6 +172,7 @@ class RateCardGenerator:
                 """
                 
                 oli_results = self.sf.query_all(oli_query)
+                print(f"[DEBUG] Opportunity {opportunity_id}: {len(oli_results['records'])} line items")
                 
                 for oli_record in oli_results['records']:
                     flat_record = {
@@ -196,6 +187,7 @@ class RateCardGenerator:
                         'Deferred_Period': oli_record['Product2']['Deferred_Period__c'] if oli_record.get('Product2') else None,
                         'Subsidy': oli_record.get('Retailer_Subsidy__c', 0),
                         'Retailer_Commission': oli_record.get('Retailer_Commission__c', 0),
+                        # Attach position data from the corresponding Assigned_Rate_Card__c record
                         'Prime_SubPrime': arc_record.get('Prime_SubPrime__c'),
                         'Prime_Position': arc_record.get('Prime_Lender_Position__c'),
                         'SubPrime_Position': arc_record.get('Sub_Prime_Lender_Position__c')
@@ -211,13 +203,94 @@ class RateCardGenerator:
                 print(f"[ERROR] Failed to process ARC record: {e}")
                 print(f"[ERROR] Record data: {arc_record}")
         
+        print(f"[DEBUG] Total flattened records: {len(flattened_records)}")
         return pd.DataFrame(flattened_records)
     
     def _get_rate_card_items_fallback(self, retailer_name: str, opportunity_account_name: str) -> pd.DataFrame:
-        """Fallback method using the original approach if single query fails"""
-        # Implementation of the original method as fallback
-        # [This would contain the original implementation]
-        return pd.DataFrame()
+        """Fallback method using the original approach if main query fails"""
+        print("[DEBUG] Using fallback method with separate queries")
+        
+        try:
+            # Use the original approach: get rate items and priorities separately, then merge
+            rate_items_df = self._get_rate_card_items_simple(retailer_name, opportunity_account_name)
+            priorities_df = self.get_assigned_priorities(retailer_name)
+            
+            if rate_items_df.empty or priorities_df.empty:
+                print("[WARNING] Either rate items or priorities is empty in fallback")
+                return pd.DataFrame()
+            
+            # Merge with opportunity ID to ensure exact matching
+            merged_df = pd.merge(
+                rate_items_df,
+                priorities_df[['Opportunity_Id', 'Lender_Name', 'Product_Vertical', 'Prime_SubPrime', 'Prime_Position', 'SubPrime_Position']],
+                on=['Opportunity_Id', 'Lender_Name', 'Product_Vertical'],
+                how='inner'
+            )
+            
+            print(f"[DEBUG] Fallback merge resulted in {len(merged_df)} records")
+            return merged_df
+            
+        except Exception as e:
+            print(f"[ERROR] Fallback method failed: {e}")
+            return pd.DataFrame()
+    
+    def _get_rate_card_items_simple(self, retailer_name: str, opportunity_account_name: str) -> pd.DataFrame:
+        """Simple query to get OpportunityLineItem records"""
+        query = f"""
+        SELECT
+            Id,
+            OpportunityId,
+            Opportunity.Lender_Company__r.Name,
+            Opportunity.Approved_Product__r.Name,
+            Opportunity.Shermin_Commission__c,
+            Product2.Name,
+            Product2.APR__c,
+            Product2.Term__c,
+            Product2.ProductCode,
+            Product2.Deferred_Period__c,
+            Retailer_Subsidy__c,
+            Retailer_Commission__c
+        FROM OpportunityLineItem
+        WHERE
+            Opportunity.Account.Name = '{opportunity_account_name}'
+            AND Opportunity.RecordType.DeveloperName = 'Retailer_Rate_Card'
+            AND Opportunity.StageName = 'Live'
+            AND Active__c = true
+        ORDER BY
+            Opportunity.Lender_Company__r.Name,
+            Opportunity.Approved_Product__r.Name
+        """
+        
+        results = self.sf.query_all(query)
+        print(f"[DEBUG] Simple query returned {len(results['records'])} opportunity line items")
+        
+        # Flatten nested Salesforce response
+        flattened_records = []
+        for record in results['records']:
+            try:
+                flat_record = {
+                    'Opportunity_Id': record.get('OpportunityId'),
+                    'Lender_Name': record['Opportunity']['Lender_Company__r']['Name'] if record.get('Opportunity') and record['Opportunity'].get('Lender_Company__r') else None,
+                    'Product_Vertical': record['Opportunity']['Approved_Product__r']['Name'] if record.get('Opportunity') and record['Opportunity'].get('Approved_Product__r') else None,
+                    'Commission': record['Opportunity']['Shermin_Commission__c'] if record.get('Opportunity') else None,
+                    'Product_Name': record['Product2']['Name'] if record.get('Product2') else None,
+                    'APR': record['Product2']['APR__c'] if record.get('Product2') else None,
+                    'Term': record['Product2']['Term__c'] if record.get('Product2') else None,
+                    'Product_Code': record['Product2']['ProductCode'] if record.get('Product2') else None,
+                    'Deferred_Period': record['Product2']['Deferred_Period__c'] if record.get('Product2') else None,
+                    'Subsidy': record.get('Retailer_Subsidy__c', 0),
+                    'Retailer_Commission': record.get('Retailer_Commission__c', 0)
+                }
+                # Only add records that have essential data
+                if flat_record['Lender_Name'] and flat_record['Product_Vertical']:
+                    flattened_records.append(flat_record)
+                else:
+                    print(f"[WARNING] Skipping item record with missing data: {flat_record}")
+            except Exception as e:
+                print(f"[ERROR] Failed to process item record: {e}")
+                print(f"[ERROR] Record data: {record}")
+        
+        return pd.DataFrame(flattened_records)
     
     def get_assigned_priorities(self, retailer_name: str) -> pd.DataFrame:
         """Query 2: Get assigned rate card priorities"""
