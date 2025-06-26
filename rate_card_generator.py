@@ -34,28 +34,31 @@ class RateCardGenerator:
         owner_filter = f" AND OwnerId = '{salesforce_user_id}'" if salesforce_user_id else ""
         
         # Use three separate queries and combine results to avoid nested semi-join restrictions
-        # Query 1: Accounts that have live rate cards (excluding terminated retailers)
+        # Query 1: Accounts that have live rate cards with active assigned rate cards
         query1 = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-            AND NOT Name LIKE '%TERMINATED%'
             AND Id IN (
                 SELECT AccountId 
                 FROM Opportunity 
                 WHERE RecordType.DeveloperName = 'Retailer_Rate_Card' 
                     AND StageName = 'Live'
+                    AND Id IN (
+                        SELECT Opportunity__c
+                        FROM Assigned_Rate_Card__c
+                        WHERE Active__c = true
+                    )
             ){owner_filter}
         """.strip()
         
-        # Query 2: Branch accounts that have their own active assigned rate cards (excluding terminated)
+        # Query 2: Branch accounts that have their own active assigned rate cards
         query2 = f"""
         SELECT Name, Id, RecordType.DeveloperName, OwnerId, Owner.Name
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName = 'Retailer_Branch'
-            AND NOT Name LIKE '%TERMINATED%'
             AND Id IN (
                 SELECT Retailer__c 
                 FROM Assigned_Rate_Card__c 
