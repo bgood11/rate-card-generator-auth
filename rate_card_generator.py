@@ -105,24 +105,6 @@ class RateCardGenerator:
             # Fallback to retailer name if account not found
             opportunity_account_name = retailer_name
         
-        # First get the opportunity IDs that have active assigned rate cards
-        assigned_opp_query = f"""
-        SELECT Opportunity__c
-        FROM Assigned_Rate_Card__c 
-        WHERE Retailer__r.Name = '{retailer_name}' 
-        AND Active__c = true
-        """
-        
-        assigned_results = self.sf.query_all(assigned_opp_query)
-        assigned_opp_ids = [record['Opportunity__c'] for record in assigned_results['records'] if record.get('Opportunity__c')]
-        
-        if not assigned_opp_ids:
-            print(f"[DEBUG] No active assigned rate cards found for {retailer_name}")
-            return pd.DataFrame()
-        
-        # Convert to quoted string list for IN clause
-        opp_ids_str = "', '".join(assigned_opp_ids)
-        
         query = f"""
         SELECT
             Opportunity.Lender_Company__r.Name,
@@ -141,7 +123,6 @@ class RateCardGenerator:
             AND Opportunity.RecordType.DeveloperName = 'Retailer_Rate_Card'
             AND Opportunity.StageName = 'Live'
             AND Active__c = true
-            AND Opportunity.Id IN ('{opp_ids_str}')
         ORDER BY
             Opportunity.Lender_Company__r.Name,
             Opportunity.Approved_Product__r.Name,
@@ -150,6 +131,15 @@ class RateCardGenerator:
         
         results = self.sf.query_all(query)
         print(f"[DEBUG] Query returned {len(results['records'])} rate card items")
+        
+        # Debug: Log details of items for specific lenders that might be duplicated
+        debug_lenders = ['JN Bank', 'JN BANK', 'JN BANK UK LTD']
+        for record in results['records']:
+            lender_name = record.get('Opportunity', {}).get('Lender_Company__r', {}).get('Name', 'Unknown') if record.get('Opportunity') else 'Unknown'
+            if any(debug_lender.lower() in lender_name.lower() for debug_lender in debug_lenders):
+                product_vertical = record.get('Opportunity', {}).get('Approved_Product__r', {}).get('Name', 'Unknown') if record.get('Opportunity') else 'Unknown'
+                product_name = record.get('Product2', {}).get('Name', 'Unknown') if record.get('Product2') else 'Unknown'
+                print(f"[DEBUG] Found {lender_name} - {product_vertical} - {product_name}")
         
         # Flatten nested Salesforce response
         flattened_records = []
@@ -200,6 +190,15 @@ class RateCardGenerator:
         
         results = self.sf.query_all(query)
         print(f"[DEBUG] Query returned {len(results['records'])} assigned priorities")
+        
+        # Debug: Log JN Bank assigned priorities
+        for record in results['records']:
+            lender_name = record.get('Opportunity__r', {}).get('Lender_Company__r', {}).get('Name', 'Unknown') if record.get('Opportunity__r') else 'Unknown'
+            if 'JN' in lender_name.upper():
+                product_vertical = record.get('Opportunity__r', {}).get('Approved_Product__r', {}).get('Name', 'Unknown') if record.get('Opportunity__r') else 'Unknown'
+                prime_position = record.get('Prime_Lender_Position__c', 'None')
+                subprime_position = record.get('Sub_Prime_Lender_Position__c', 'None')
+                print(f"[DEBUG] Assigned: {lender_name} - {product_vertical} - Prime:{prime_position} SubPrime:{subprime_position}")
         
         # Flatten nested Salesforce response
         flattened_records = []
