@@ -40,7 +40,7 @@ class RateCardGenerator:
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName IN ('Retailer', 'Retailer_Branch')
-            AND Name NOT LIKE '%TERMINATED%'
+            AND NOT (Name LIKE '%TERMINATED%')
             AND Id IN (
                 SELECT AccountId 
                 FROM Opportunity 
@@ -55,7 +55,7 @@ class RateCardGenerator:
         FROM Account
         WHERE Name LIKE '%{partial_name}%'
             AND RecordType.DeveloperName = 'Retailer_Branch'
-            AND Name NOT LIKE '%TERMINATED%'
+            AND NOT (Name LIKE '%TERMINATED%')
             AND Id IN (
                 SELECT Retailer__c 
                 FROM Assigned_Rate_Card__c 
