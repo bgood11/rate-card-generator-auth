@@ -271,9 +271,69 @@ Create test users in Supabase with different roles for testing:
 - **Manual**: Use Vercel CLI or dashboard for manual deployments
 - **Rollback**: Revert git commits and push to main
 
+## 🐛 Critical Bug Fix: Rate Card Duplicate Position Issue
+
+### Problem Discovery
+**Issue**: JN Bank was appearing as both Prime 1st AND Prime 2nd for the same product type (IFC), which is impossible.
+
+**User Report**: "JN Bank dont have prime 1st IFC for taggas stafford AS Heat Pumps" - only Prime 2nd should appear for IFC products.
+
+### Root Cause Investigation
+Through systematic debugging with Salesforce MCP tools, discovered:
+
+1. **Data Structure**: JN Bank has TWO separate Opportunities for ECO ENERGY LTD:
+   - **006Nz00000R0TaMIAV**: IBC products (180 months) with Prime 1st position
+   - **006Nz00000R8W3DIAV**: IFC products (12/24/36 months) with Prime 2nd position
+
+2. **Pandas Merge Issue**: The merge logic in `process_rate_cards()` was joining on `['Lender_Name', 'Product_Vertical']` only, creating a many-to-many relationship:
+   - IBC OpportunityLineItem records were getting merged with BOTH Prime 1st AND Prime 2nd positions
+   - IFC OpportunityLineItem records were getting merged with BOTH Prime 1st AND Prime 2nd positions
+   - This caused cross-contamination between different Opportunities
+
+### Solutions Attempted
+
+#### 1. **Active Assigned Rate Card Filtering** ❌ 
+- Added pre-filtering to only include OpportunityLineItem records from Opportunities with active Assigned_Rate_Card__c records
+- **Result**: Still showed duplicates because both IBC and IFC Opportunities had active assigned rate cards
+
+#### 2. **Opportunity ID Merge** ❌
+- Added Opportunity_Id to merge logic: `['Opportunity_Id', 'Lender_Name', 'Product_Vertical']`
+- **Result**: Still failed - merge complexity remained problematic
+
+#### 3. **Complete Rewrite: Single Query Approach** ✅
+- **Solution**: Eliminated pandas merge entirely
+- **Approach**: Start with Assigned_Rate_Card__c records, get OpportunityLineItem records for each specific Opportunity
+- **Result**: Direct 1:1 relationship ensures each rate card line item gets correct position
+
+### Final Implementation
+**File**: `rate_card_generator.py`
+
+**New Architecture**:
+```python
+def get_rate_card_items(self, retailer_name: str) -> pd.DataFrame:
+    # 1. Query active Assigned_Rate_Card__c records for retailer
+    # 2. For each unique Opportunity, get its OpportunityLineItem records  
+    # 3. Attach position data directly from Assigned_Rate_Card__c
+    # 4. Return combined data with embedded position information
+    
+def process_rate_cards(self, retailer_name: str) -> Dict[str, pd.DataFrame]:
+    # No merge needed - position data already embedded
+    # Process rate card items directly
+```
+
+**Key Benefits**:
+- **No merge complexity**: Position data embedded at query time
+- **Impossible cross-contamination**: Each OpportunityLineItem tied to specific Assigned_Rate_Card__c
+- **Data integrity**: 1:1 relationship guarantees correct positions
+
+### Expected Results
+- **JN Bank AS Heat Pump IBC** (180 months) → Only Prime 1st position
+- **JN Bank AS Heat Pump IFC** (12/24/36 months) → Only Prime 2nd position  
+- **No duplicate positions** for any lender/product combination
+
 ---
 
 **Last Updated**: 2025-01-26  
-**Version**: 2.1.1 (Enhanced Retailer Search)  
-**Latest Enhancement**: Improved retailer search to include branch accounts whose parent accounts have live rate cards  
+**Version**: 2.2.0 (Rate Card Position Fix)  
+**Latest Enhancement**: Fixed critical duplicate position issue through complete query architecture rewrite  
 **Next Features**: Additional business tools (analytics, reporting, admin tools)

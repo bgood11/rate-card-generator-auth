@@ -191,6 +191,23 @@ This project is designed to deploy seamlessly on Vercel with automatic Supabase 
 3. Set environment variables
 4. Deploy
 
+## 🔧 Recent Critical Fix: Rate Card Position Duplicates
+
+### Issue Resolved
+Fixed critical bug where lenders appeared in duplicate positions (e.g., JN Bank showing as both Prime 1st AND Prime 2nd for same product type).
+
+### Root Cause
+- Complex pandas merge logic was creating many-to-many relationships between OpportunityLineItem and Assigned_Rate_Card__c records
+- Multiple Opportunities for same lender/product vertical caused cross-contamination
+
+### Solution
+- **Complete architecture rewrite**: Eliminated pandas merge entirely
+- **Direct query approach**: Start with Assigned_Rate_Card__c, get OpportunityLineItem records for each specific Opportunity
+- **1:1 relationship**: Ensures each rate card line item gets correct position data
+
+### Technical Details
+See `CLAUDE.md` for comprehensive debugging process, attempted solutions, and final implementation details.
+
 ## 📞 Support
 
 For issues or questions about this authentication version, refer to the development checklist in `authbuild.md`.
@@ -199,5 +216,5 @@ For issues or questions about this authentication version, refer to the developm
 
 **Production URL**: [rate-card-generator-auth.vercel.app](https://rate-card-generator-auth.vercel.app)  
 **Repository**: [github.com/bgood11/rate-card-generator-auth](https://github.com/bgood11/rate-card-generator-auth)  
-**Version**: 2.1.1 (Enhanced Retailer Search)  
+**Version**: 2.2.0 (Rate Card Position Fix)  
 **Status**: ✅ Production Ready
